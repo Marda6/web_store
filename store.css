@@ -1,0 +1,746 @@
+/* ============================================================================
+   ENCY Core — Extension Store. Tokens and shared components come from
+   styles.css; only page-specific pieces live here.
+   ========================================================================= */
+
+/* header: user chip on the right */
+.header__user { display:flex; align-items:center; gap:8px; height:32px; padding:0 8px 0 4px;
+  border-radius:var(--ec-radius); transition:background .12s; }
+.header__user:hover { background:var(--ec-fg-8); }
+.header__user span { font-size:12px; color:var(--ec-fg-80); }
+.header__mark { width:16px; height:16px; flex-shrink:0; color:var(--ec-fg-72); }
+.header__user .chev { width:13px; height:13px; color:var(--ec-fg-48); }
+
+/* ================================================================ SIDEBAR === */
+/* same plate as the catalog panel: the two sit side by side, so a different
+   card tone reads as an unintended step rather than a hierarchy */
+.side { width:232px; flex-shrink:0; background:var(--ec-card); }
+.side__head { padding:0 6px 0 12px; }
+.side__title { font-size:13px; font-weight:500; color:var(--ec-fg-100); }
+.side__body { padding:4px 8px 12px; display:flex; flex-direction:column; }
+/* group labels: uppercase micro-caps, so the groups read without dividers */
+.side__label { margin:14px 8px 6px; font-size:10px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--ec-fg-48); white-space:nowrap; }
+.side__body > .side__label:first-child { margin-top:6px; }
+/* label row with a quiet count on the right (Tags · 14) */
+.side__label--row { display:flex; align-items:center; }
+.side__label--row span { margin-left:auto; padding-left:8px; letter-spacing:0;
+  font-variant-numeric:tabular-nums; }
+.side__search { padding:2px 4px 4px; }
+/* wrapper that lines a full-width control up with the filter rows */
+.side__field { padding:0 4px; }
+
+/* filter rows: radio (price) and checkbox (tags) share the geometry */
+/* full width, so the count can hold the panel's right edge instead of trailing
+   the label — a button is shrink-to-fit even when it is display:flex */
+.frow { display:flex; width:100%; align-items:center; gap:8px; height:26px; padding:0 8px;
+  flex-shrink:0; border-radius:var(--ec-radius); font-size:12px; color:var(--ec-fg-80);
+  text-align:left; transition:background .12s,color .12s; }
+.frow:hover { background:var(--ec-fg-4); color:var(--ec-fg-100); }
+.frow.is-on { color:var(--ec-fg-100); }
+.frow span { min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* counts form a right-aligned column of tabular figures — scanning down the
+   list compares magnitudes, so the digits line up on their last place */
+.frow__cnt { margin-left:auto; padding-left:8px; font-style:normal; font-size:11px;
+  color:var(--ec-fg-48); font-variant-numeric:tabular-nums; text-align:right; }
+.frow.is-dim { color:var(--ec-fg-32); }
+.frow.is-dim .frow__cnt { color:var(--ec-fg-24); }
+/* radio: 14px ring, green dot when picked */
+.frow__radio { width:14px; height:14px; flex-shrink:0; border-radius:999px;
+  border:1px solid var(--ec-fg-24); display:grid; place-items:center; transition:border-color .12s; }
+.frow.is-on .frow__radio { border-color:var(--ec-green); }
+.frow.is-on .frow__radio::after { content:''; width:6px; height:6px; border-radius:999px;
+  background:var(--ec-green); }
+/* checkbox: 14px square, green fill + dark check when on */
+.frow__check { width:14px; height:14px; flex-shrink:0; border-radius:3px;
+  border:1px solid var(--ec-fg-24); display:grid; place-items:center;
+  color:transparent; transition:border-color .12s,background .12s; }
+.frow__check svg { width:10px; height:10px; }
+.frow.is-on .frow__check { background:var(--ec-green); border-color:var(--ec-green); color:#04150e; }
+
+/* ================================================================ CONTENT === */
+.store { flex:1; min-width:0; background:var(--ec-card); }
+.store__head { padding:0 6px 0 4px; }
+.store__back { margin-left:4px; display:grid; place-items:center; width:24px; height:24px;
+  flex-shrink:0; border-radius:var(--ec-radius); color:var(--ec-fg-64);
+  transition:color .12s,background .12s; }
+.store__back:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
+.store__back svg { width:16px; height:16px; }
+.store__title { margin-left:8px; font-size:13px; font-weight:500; color:var(--ec-fg-100);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* the back button only steals the title's indent while it is actually shown —
+   a [hidden] button still matches the sibling combinator */
+.store__back:not([hidden]) + .store__title { margin-left:2px; }
+.store__cnt { margin-left:6px; font-size:12px; color:var(--ec-fg-48); white-space:nowrap; }
+/* scope lives in the app header, past the title — it names what the whole
+   page is about, not what the panel is currently filtering */
+/* the header sits on --ec-rail, which is darker than the panels, so the default
+   fg-4 track disappears into it — the scope switch gets a heavier plate */
+.header .segmented { flex-shrink:0; background:var(--ec-fg-12); }
+.header .segmented button { height:24px; padding:0 12px; font-size:12px; }
+.seg__n { margin-left:5px; font-style:normal; color:var(--ec-fg-48);
+  font-variant-numeric:tabular-nums; }
+/* the picked scope is a solid plate — it is the page's own state, louder than
+   the tinted segments used for in-page ranges */
+.header .segmented button.is-on { background:var(--ec-fg-100); color:var(--ec-bg); }
+.header .segmented button.is-on .seg__n { color:inherit; opacity:.4; }
+/* an active toggle reads as pressed, matching the view-mode buttons */
+.panel__settings.is-on { background:var(--ec-fg-8); color:var(--ec-fg-100); }
+/* favorites on: the solid star glyph in plain white — a filled shape says "this
+   filter is applied" more plainly than a coloured outline at 15px */
+#favBtn.is-on { color:var(--ec-fg-100); }
+.panel__settings { position:relative; }
+
+/* the scope switch is 28px tall (24px segment + 2px track padding), so the find
+   cluster next to it is set to the same height to read as one row */
+.header .panel__settings { width:28px; height:28px; }
+.header .search .field { height:28px; }
+/* the funnel counts what a hidden panel is still filtering out */
+.panel__badge { position:absolute; top:-1px; right:-1px; display:grid; place-items:center;
+  min-width:13px; height:13px; padding:0 3px; border-radius:999px;
+  background:var(--ec-green); color:#04150e; font-size:9px; font-weight:600;
+  font-variant-numeric:tabular-nums; }
+.store__head .selectish { flex-shrink:0; gap:6px; }
+.store__head .selectish svg:first-child { color:var(--ec-fg-56); }
+/* find cluster lives in the app header, right of the scope switch: the query
+   searches the whole catalog, not just what the panel is showing.
+   The magnifier sits at the trailing edge, as in the ENCY 4 Store. */
+.header .search { width:280px; flex-shrink:0; margin-left:4px; }
+.header .search svg { left:auto; right:7px; width:16px; height:16px; }
+.header .search .field { padding:0 27px 0 8px; }
+
+/* ---- extension logo: white circle + flat glyph tinted by the extension color
+   (artwork, like the part thumbs in Clouds; the circle stays white in both
+   themes — it is the extension's identity plate) ---- */
+.xlogo { display:grid; place-items:center; flex-shrink:0; border-radius:999px;
+  background:#fff; border:1px solid rgba(10,12,12,.12);
+  color:color-mix(in srgb, var(--xc, var(--op-blue)) 55%, #16191b); }
+
+/* paid pill: amber with dark ink (same recipe as the owner role tag) */
+.paidtag { display:inline-flex; align-items:center; height:18px; padding:0 7px; flex-shrink:0;
+  border-radius:999px; background:var(--ec-amber); color:#1a1405;
+  font-size:10px; font-weight:600; }
+
+/* star action (hover-revealed, amber when on) */
+.xstar { display:grid; place-items:center; width:24px; height:24px; flex-shrink:0;
+  border-radius:var(--ec-radius); color:var(--ec-fg-48); opacity:0;
+  transition:opacity .12s,color .12s,background .12s; }
+.xstar:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
+.xstar.is-on { opacity:1; color:var(--ec-fg-100); }
+.xstar svg { width:14px; height:14px; }
+.xstar.is-on svg { width:17px; height:17px; }
+
+/* tag pills */
+.xtag { display:inline-flex; align-items:center; height:20px; padding:0 9px; flex-shrink:0;
+  border-radius:999px; background:var(--ec-fg-8); font-size:11px;
+  color:var(--ec-fg-72); white-space:nowrap; text-transform:capitalize; }
+
+/* ---- grid of extension cards ---- */
+.xgrid { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr));
+  gap:8px; padding:12px; }
+.xcard { display:flex; flex-direction:column; text-align:left; overflow:hidden;
+  border:1px solid transparent; border-radius:var(--ec-radius-md); background:var(--ec-fg-4);
+  cursor:pointer; transition:background .12s,border-color .12s; }
+/* hover outline: --border is fg-based, so it is a light hairline on the dark
+   theme and a dark one on the light theme without a second token */
+.xcard:hover { background:var(--ec-fg-6); border-color:var(--border); }
+.xcard:hover .xstar { opacity:1; }
+
+/* hero band: logo + name + "by publisher" on top, tag pills pinned to its
+   bottom; the tinted variant carries the extension color with dark ink
+   (the collections recipe — the one deliberately bright spot) */
+.xcard__hero { display:flex; flex-direction:column; gap:12px; padding:12px;
+  min-height:112px; }
+.xcard__hrow { display:flex; align-items:flex-start; gap:10px; min-width:0; }
+.xcard__logo { width:44px; height:44px; }
+.xcard__logo svg { width:24px; height:24px; }
+.xcard__htext { flex:1; min-width:0; padding-top:2px; }
+.xcard__name { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; font-size:15px; line-height:19px; font-weight:600; color:var(--ec-fg-100); }
+.xcard__by { display:flex; align-items:center; gap:6px; margin-top:2px; min-width:0;
+  font-size:11px; line-height:14px; color:var(--ec-fg-56); white-space:nowrap; overflow:hidden; }
+.xcard__bysep { width:1px; height:10px; flex-shrink:0; background:var(--ec-fg-16); }
+.xcard__tags { display:flex; gap:4px; min-width:0; overflow:hidden; margin-top:auto; }
+
+/* ---- category palette: one hue per kind. The hero band carries it, so the
+   grid itself reads as the legend for the sidebar categories. ---- */
+.xcard--utility   { --kind:#1f6fd0; }
+.xcard--operation { --kind:#1d8a5f; }
+.xcard--popup     { --kind:#7a4fd6; }
+.xcard--global    { --kind:#c2622a; }
+
+/* tinted heroes: the category color with light ink (per the reference).
+   Shared with the moderation card, which reuses the same anatomy. */
+.xcard--tint .xcard__hero,
+.xcard--tint .reqcard__hero { background:var(--kind, var(--ec-fg-8));
+  --ink:#fff; --ink-soft:rgba(255,255,255,.72); }
+.xcard--tint .xcard__name { color:var(--ink); }
+.xcard--tint .xcard__by { color:var(--ink-soft); }
+.xcard--tint .xcard__bysep { background:rgba(255,255,255,.35); }
+.xcard--tint .xcard__hero .xtag { background:rgba(255,255,255,.18); color:var(--ink); }
+.xcard--tint .paidtag { background:rgba(255,255,255,.92); color:#1a1405; }
+
+.xcard__desc { flex:1; min-height:28px; padding:10px 12px 8px; font-size:11px;
+  line-height:14px; color:var(--ec-fg-56);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.xcard__foot { display:flex; align-items:center; gap:8px; margin:0 12px;
+  padding:8px 0 10px; border-top:1px solid var(--ec-fg-6); }
+.xcard__kind { font-size:12px; font-weight:500; color:var(--ec-fg-96); white-space:nowrap; }
+.xcard__fsep { width:1px; height:12px; flex-shrink:0; background:var(--ec-fg-12); }
+.xcard__inst { display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
+  font-size:12px; color:var(--ec-fg-64); font-variant-numeric:tabular-nums; }
+.xcard__inst svg { width:13px; height:13px; color:var(--ec-fg-48); }
+.xcard__fspacer { flex:1; }
+
+/* Install: a pill button like the reference; installed = quiet green confirmation */
+.xinstall { display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 14px;
+  flex-shrink:0; border-radius:999px; background:var(--ec-fg-12); border:1px solid transparent;
+  font-size:12px; font-weight:500; color:var(--ec-fg-100); white-space:nowrap;
+  transition:background .12s,border-color .12s; }
+.xinstall:hover { background:var(--ec-fg-16); }
+.xinstall.is-on { background:var(--ec-green-08); border-color:var(--ec-green); font-weight:400; }
+.xinstall svg { width:13px; height:13px; }
+.xinstall.is-on svg { color:var(--ec-green); }
+
+/* ---- list view ---- */
+.xlist { display:flex; flex-direction:column; gap:4px; padding:8px 12px 12px; }
+.xrow { display:flex; align-items:center; gap:10px; padding:6px 8px 6px 6px; text-align:left;
+  border:1px solid transparent; border-radius:var(--ec-radius-md); background:var(--ec-fg-4);
+  cursor:pointer; transition:background .12s,border-color .12s; }
+.xrow:hover { background:var(--ec-fg-6); border-color:var(--border); }
+.xrow:hover .xstar { opacity:1; }
+.xrow .xlogo { width:32px; height:32px; }
+.xrow .xlogo svg { width:18px; height:18px; }
+.xrow__text { flex:1; min-width:0; }
+.xrow__line1 { display:flex; align-items:center; gap:6px; min-width:0; }
+.xrow__name { font-size:12px; font-weight:500; color:var(--ec-fg-100);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.xrow__desc { display:block; margin-top:1px; font-size:11px; color:var(--ec-fg-48);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.xrow__kind { width:110px; flex-shrink:0; font-size:11px; color:var(--ec-fg-48);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.xrow__inst { width:56px; flex-shrink:0; display:inline-flex; align-items:center;
+  justify-content:flex-end; gap:4px; font-size:11px; color:var(--ec-fg-64);
+  font-variant-numeric:tabular-nums; }
+.xrow__inst svg { width:12px; height:12px; color:var(--ec-fg-48); }
+.xrow .xinstall { height:24px; padding:0 12px; }
+@media (max-width:900px) { .xrow__kind { display:none; } }
+
+/* ======================================================= EXTENSION VIEW === */
+/* A window over the catalog rather than a page that replaces it: the list
+   stays visible around the edges and keeps its scroll position. */
+.dwin { position:fixed; inset:0; z-index:60; display:flex; padding:24px;
+  align-items:center; justify-content:center; background:var(--ec-bg-80); }
+.dwin[hidden] { display:none; }
+.dwin__box { width:100%; max-width:1000px; max-height:100%; min-height:0;
+  display:flex; flex-direction:column; overflow:hidden;
+  border:1px solid var(--border); border-radius:var(--ec-radius-lg);
+  background:var(--ec-card); box-shadow:var(--ec-shadow); }
+/* window chrome carries the package id — the identity a moderator copies */
+.dwin__head { display:flex; align-items:center; gap:4px; flex-shrink:0;
+  height:36px; padding:0 6px 0 12px; border-bottom:1px solid var(--divider); }
+.dwin__cap { flex:1; min-width:0; font-size:12px; color:var(--ec-fg-56);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dwin__btn { display:grid; place-items:center; width:24px; height:24px; flex-shrink:0;
+  border-radius:var(--ec-radius); color:var(--ec-fg-56);
+  transition:background .12s,color .12s; }
+.dwin__btn:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
+.dwin__btn svg { width:14px; height:14px; }
+.dwin__scroll { flex:1; min-height:0; overflow-y:auto; }
+.dwin__hr { height:1px; background:var(--divider); margin:0 20px; }
+
+.dhero { display:flex; align-items:flex-start; gap:14px; padding:20px 20px 16px; }
+.dhero__logo { width:48px; height:48px; }
+.dhero__logo svg { width:26px; height:26px; }
+.dhero__text { flex:1; min-width:0; }
+.dhero__name { display:flex; align-items:center; gap:8px; font-size:20px; line-height:26px;
+  font-weight:600; color:var(--ec-fg-100); }
+.dhero__meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:6px;
+  font-size:11px; color:var(--ec-fg-56); }
+.dhero__sep { width:1px; height:10px; flex-shrink:0; background:var(--ec-fg-16); }
+.dhero__dl { display:inline-flex; align-items:center; gap:4px; }
+.dhero__dl svg { width:11px; height:11px; }
+.dhero__sum { max-width:64ch; margin-top:6px; font-size:12px; line-height:18px;
+  color:var(--ec-fg-72); }
+/* the category pill reuses the card palette, so hues live in one place */
+.dcat { display:inline-flex; align-items:center; height:20px; padding:0 10px; flex-shrink:0;
+  border-radius:999px; background:var(--kind, var(--ec-fg-8)); color:#fff;
+  font-size:10px; font-weight:500; }
+
+.dbody { display:flex; align-items:flex-start; gap:20px; padding:16px 20px 20px; }
+.dmain { flex:1; min-width:0; }
+/* Install and the facts stay put while the description scrolls past: the
+   decision the window exists for should never be scrolled off. Sticky to the
+   top of .dwin__scroll, offset by the same 16px the body is padded with.
+   If the column itself is taller than the window it scrolls with the page —
+   that is the one case where pinning would hide its own tail. */
+.dside { flex:0 0 260px; display:flex; flex-direction:column; gap:16px;
+  position:sticky; top:16px; align-self:flex-start;
+  max-height:calc(var(--dwin-scroll-h, 100vh) - 32px);
+  overflow-y:auto; overscroll-behavior:contain; }
+
+/* ---- gallery ---- */
+.dgal { margin-bottom:20px; }
+.dgal__stage { position:relative; aspect-ratio:16/9; overflow:hidden;
+  border:1px solid var(--ec-fg-12); border-radius:var(--ec-radius-md);
+  background:var(--ec-fg-4); }
+.dgal__track { display:flex; height:100%; transition:transform .22s ease; }
+.dgal__slide { flex:0 0 100%; height:100%; }
+.dgal__slide img { width:100%; height:100%; object-fit:cover; }
+/* no screenshots: a plate in the category color with the extension's glyph */
+.dgal__stage--empty { display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:8px; background:var(--kind, var(--ec-fg-8)); border-color:transparent; }
+.dgal__glyph { width:48px; height:48px; color:#fff; opacity:.9; }
+.dgal__none { font-size:11px; color:rgba(255,255,255,.72); }
+.dgal__nav { position:absolute; top:50%; transform:translateY(-50%);
+  display:grid; place-items:center; width:28px; height:28px; border-radius:999px;
+  background:var(--ec-bg-80); color:var(--ec-fg-100); opacity:0; transition:opacity .12s,background .12s; }
+.dgal__stage:hover .dgal__nav { opacity:1; }
+.dgal__nav:hover { background:var(--ec-bg-96); }
+.dgal__nav[disabled] { opacity:0 !important; pointer-events:none; }
+.dgal__nav svg { width:14px; height:14px; }
+.dgal__nav.is-prev { left:8px; }
+.dgal__nav.is-next { right:8px; }
+.dgal__cnt { position:absolute; right:8px; bottom:8px; display:flex; align-items:center;
+  height:20px; padding:0 8px; border-radius:999px; background:var(--ec-bg-80);
+  font-size:10px; color:var(--ec-fg-80); font-variant-numeric:tabular-nums; }
+.dgal__thumbs { display:flex; gap:6px; margin-top:6px; overflow-x:auto; padding-bottom:2px; }
+.dgal__th { flex:0 0 64px; height:40px; overflow:hidden; border-radius:var(--ec-radius);
+  border:1px solid transparent; opacity:.6; transition:opacity .12s,border-color .12s; }
+.dgal__th:hover { opacity:1; }
+.dgal__th.is-on { opacity:1; border-color:var(--ec-green); }
+.dgal__th img { width:100%; height:100%; object-fit:cover; }
+
+/* ---- about ---- */
+.dblock__h { margin-bottom:8px; font-size:13px; line-height:18px; font-weight:600;
+  color:var(--ec-fg-100); }
+/* clamped until it earns the "Read more" — the fade says there is more below */
+.dclamp { position:relative; max-height:260px; overflow:hidden; }
+.dclamp.is-open { max-height:none; }
+/* the fade only belongs on text that is actually cut off — .is-clipped is set
+   by renderDetail() when the copy overflows the clamp */
+.dclamp::after { content:''; display:none; position:absolute; left:0; right:0; bottom:0;
+  height:56px; background:linear-gradient(transparent, var(--ec-card)); pointer-events:none; }
+.dclamp.is-clipped:not(.is-open)::after { display:block; }
+.dclamp p { font-size:12px; line-height:18px; color:var(--ec-fg-72); max-width:68ch; }
+.dclamp p + p { margin-top:8px; }
+/* README structure: a sub-heading one step under the "About" head, and bullets
+   that hang their marker in the margin so the text block keeps one left edge */
+.dsub { margin:16px 0 6px; font-size:12px; line-height:16px; font-weight:600;
+  color:var(--ec-fg-100); }
+.dlist { margin:0; padding-left:16px; max-width:68ch; list-style:disc; }
+.dlist li { font-size:12px; line-height:18px; color:var(--ec-fg-72); }
+.dlist li::marker { color:var(--ec-fg-32); }
+.dlist li + li { margin-top:4px; }
+.dmore { margin-top:6px; padding:0; font-size:12px; color:var(--ec-blue-soft); }
+.dmore:hover { text-decoration:underline; }
+
+/* ---- sidebar ---- */
+.dact { display:flex; align-items:center; gap:8px; }
+.dact__btn { flex:1; height:32px; justify-content:center; }
+.dact .xstar { opacity:1; width:32px; height:32px; background:var(--ec-fg-8); }
+.dsect__h { margin:0 0 6px 2px; font-size:12px; line-height:16px; font-weight:600;
+  color:var(--ec-fg-100); }
+.dcard { padding:4px; border-radius:var(--ec-radius-md); background:var(--ec-fg-4); }
+.drow { display:flex; align-items:center; gap:8px; padding:5px 8px; }
+.drow__k { flex:0 0 84px; font-size:11px; color:var(--ec-fg-56); }
+.drow__v { flex:1; min-width:0; font-size:11px; color:var(--ec-fg-96);
+  overflow:hidden; text-overflow:ellipsis; }
+.dtags { display:flex; flex-wrap:wrap; gap:4px; }
+.dtags .xtag { cursor:pointer; transition:background .12s,color .12s; }
+.dtags .xtag:hover { background:var(--ec-fg-16); color:var(--ec-fg-100); }
+.dvh { display:flex; flex-direction:column; max-height:232px; overflow-y:auto; }
+.dvh__row { display:flex; align-items:center; gap:8px; padding:5px 8px;
+  border-radius:var(--ec-radius); font-size:11px; color:var(--ec-fg-72); }
+.dvh__row:hover { background:var(--ec-fg-4); }
+.dvh__v { flex:0 0 44px; color:var(--ec-fg-96); font-variant-numeric:tabular-nums; }
+.dvh__row.is-current .dvh__v { color:var(--ec-badge); }
+.dvh__d { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dvh__r { flex:0 0 auto; color:var(--ec-fg-48); }
+
+@media (max-width:820px) {
+  .dwin { padding:0; }
+  .dwin__box { max-width:none; height:100%; border-radius:0; border:none; }
+  .dbody { flex-direction:column; }
+  .dside { flex:1 1 auto; width:100%; }
+}
+
+/* ============================================================ ACCOUNT ===== */
+/* Full-panel page with its own left nav. Only the three sections every user
+   has; the admin ones (Statistics, Moderation, People, ...) are not built. */
+/* the nav is anchored to the panel's left edge on every section, so switching
+   between a narrow section and a wide admin one never shifts it sideways;
+   sections that want less width constrain their own column instead */
+.acct { display:flex; gap:12px; padding:12px; }
+.acct__nav { width:196px; flex-shrink:0; display:flex; flex-direction:column; gap:2px;
+  padding:4px; border:1px solid transparent; border-radius:var(--ec-radius-md);
+  background:var(--ec-fg-4); align-self:flex-start; }
+.anav { display:flex; align-items:center; gap:8px; height:26px; padding:0 8px;
+  border-radius:var(--ec-radius); font-size:12px; color:var(--ec-fg-72); text-align:left;
+  transition:background .12s,color .12s; }
+.anav:hover { background:var(--ec-fg-6); color:var(--ec-fg-100); }
+.anav.is-on { background:var(--ec-fg-8); color:var(--ec-fg-100); font-weight:500; }
+.anav svg { width:14px; height:14px; flex-shrink:0; color:var(--ec-fg-48); }
+.anav.is-on svg { color:var(--ec-blue-soft); }
+
+.acct__main { flex:1; min-width:0; max-width:860px; }
+/* admin sections carry tables and charts, so they take all the width there is */
+.acct--wide .acct__main { max-width:none; }
+/* section headings match the panel title scale, not a landing-page h1 */
+.acct__h1 { margin:0 0 10px; font-size:13px; line-height:18px; font-weight:500;
+  color:var(--ec-fg-100); }
+
+.acard { padding:12px; margin-bottom:8px; border:1px solid transparent;
+  border-radius:var(--ec-radius-md); background:var(--ec-fg-4); }
+.acard--flush { padding:0; overflow:hidden; }
+.acard__head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.acard__icon { width:16px; height:16px; flex-shrink:0; color:var(--ec-fg-72); }
+.acard__title { font-size:12px; line-height:16px; font-weight:500; color:var(--ec-fg-100); }
+.acard__lead { font-size:11px; line-height:16px; color:var(--ec-fg-72); }
+
+/* facts strip: label above value, columns sized to content */
+.acard--facts { display:flex; flex-wrap:wrap; gap:10px 32px; }
+.fact__label { margin-bottom:2px; font-size:10px; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--ec-fg-48); }
+.fact__value { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ec-fg-100); }
+
+/* role + state pills: tinted, one hue per meaning */
+.roletag, .statetag { display:inline-flex; align-items:center; height:18px; padding:0 8px;
+  flex-shrink:0; border-radius:999px; font-size:10px; font-weight:500; }
+.roletag.is-admin { background:rgba(255,112,114,.14); color:#ff9a9b; }
+.roletag.is-customer { background:var(--ec-blue-tint); color:var(--ec-blue-soft); }
+.roletag.is-publisher { background:rgba(149,132,235,.16); color:var(--op-violet); }
+.statetag.is-ok { background:var(--ec-green-16); color:var(--ec-badge); }
+.statetag.is-wait { background:rgba(235,193,74,.14); color:var(--ec-amber); }
+.statetag.is-bad { background:rgba(255,112,114,.14); color:#ff9a9b; }
+
+/* quiet inline hint, dotted so it reads as explanatory, not navigational */
+.acct__hint { font-size:11px; color:var(--ec-fg-48);
+  border-bottom:1px dotted var(--ec-fg-24); border-radius:0; padding:0; }
+.acct__hint:hover { color:var(--ec-fg-80); }
+
+.acct__signin { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.acct__aside { font-size:11px; color:var(--ec-fg-56); }
+/* caution, not an error: amber icon, body text stays readable */
+.acct__warn { display:flex; align-items:flex-start; gap:6px; margin-top:10px;
+  font-size:11px; line-height:16px; color:var(--ec-fg-56); }
+.acct__warn svg { width:13px; height:13px; flex-shrink:0; margin-top:1px; color:var(--ec-amber); }
+.acct__connect { display:flex; gap:8px; margin-top:10px; }
+.acct__connect .field { height:24px; max-width:320px; }
+.acct__connect .btn-secondary { flex-shrink:0; }
+.acct__connect .btn-secondary:disabled { color:var(--ec-fg-32); cursor:default;
+  background:var(--ec-fg-6); border-color:transparent; }
+.acct__foot { display:flex; justify-content:flex-end; }
+
+/* section tables (published extensions) */
+.atable { width:100%; border-collapse:collapse; }
+.atable th { height:26px; padding:0 10px; text-align:left; font-size:11px; font-weight:400;
+  color:var(--ec-fg-48); border-bottom:1px solid var(--divider); white-space:nowrap; }
+.atable td { padding:6px 10px; font-size:12px; color:var(--ec-fg-80);
+  border-bottom:1px solid var(--divider); vertical-align:middle; }
+.atable tr:last-child td { border-bottom:none; }
+.atable tbody tr:hover { background:var(--ec-fg-4); }
+.atable__name { display:block; font-weight:500; color:var(--ec-fg-100); cursor:pointer; }
+.atable__name:hover { color:var(--ec-blue-soft); }
+.atable__sub { display:block; margin-top:1px; font-size:11px; color:var(--ec-fg-48); }
+.atable__act { width:40px; text-align:right; }
+.acticon { display:inline-grid; place-items:center; width:24px; height:24px;
+  border-radius:var(--ec-radius); color:var(--ec-fg-48); transition:background .12s,color .12s; }
+.acticon:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
+.acticon svg { width:14px; height:14px; }
+
+/* ---- admin sections ---- */
+.acct__navsep { height:1px; background:var(--divider); margin:8px 6px 2px; }
+.acct__navlabel { padding:4px 10px 2px; font-size:10px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--ec-fg-32); }
+.acct__h1 { display:flex; align-items:center; gap:8px; }
+.acct__h1icon { width:20px; height:20px; flex-shrink:0; color:var(--ec-blue-soft); }
+.acct__h1n { font-size:16px; font-weight:400; color:var(--ec-fg-48); }
+.acct__hspacer { flex:1; }
+.acct__toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+.acct__meta { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+.acct__caption { font-size:11px; line-height:16px; color:var(--ec-fg-48); }
+.acard__bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.acct__grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+  gap:8px; margin-top:8px; align-items:start; }
+.acct__grid .acard { margin-bottom:0; }
+
+/* dashboard: a measure heading with its hue as a dot, so the breakdowns below
+   are visibly grouped by which number they slice */
+.acct__seclabel { display:flex; align-items:center; gap:6px; margin:14px 0 0;
+  font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ec-fg-56); }
+.dot { width:8px; height:8px; flex-shrink:0; border-radius:999px; }
+.dot--v { background:var(--m-visitors); }
+.dot--d { background:var(--m-downloads); }
+.acard--chart { margin-bottom:0; }
+.acard__title--tight { margin-bottom:10px; }
+.acard__split { margin-top:12px; padding-top:12px; border-top:1px solid var(--divider); }
+.acct__caption--foot { margin-top:10px; }
+
+/* range switch: one track, the picked segment tinted */
+.segmented { display:flex; gap:2px; padding:2px; border-radius:var(--ec-radius-md);
+  background:var(--ec-fg-4); }
+/* concentric radii: the segment sits 2px inside an 8px track, so its own corner
+   is 8 - 2 = 6px — a 4px corner reads as a gap at the rounded ends */
+.segmented button { height:20px; padding:0 10px; border-radius:6px; font-size:11px;
+  color:var(--ec-fg-64); transition:background .12s,color .12s; }
+.segmented button:hover { color:var(--ec-fg-100); }
+.segmented button.is-on { background:var(--ec-blue-tint); color:var(--ec-blue-soft); }
+/* full-width variant: the segments split the track evenly (sidebar Price) */
+.segmented--full { width:100%; }
+.segmented--full button { flex:1; min-width:0; height:24px; padding:0 6px; font-size:12px; }
+.segmented--full button.is-on { background:var(--ec-fg-12); color:var(--ec-fg-100); }
+
+/* stat tiles: label, one big number, one line of context */
+.tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;
+  margin-bottom:8px; }
+.tile { padding:12px; border:1px solid transparent; border-radius:var(--ec-radius-md);
+  background:var(--ec-fg-4); }
+.tile__label { font-size:11px; color:var(--ec-fg-56); }
+/* proportional figures — tabular-nums makes a standalone number look loose */
+.tile__value { margin:2px 0; font-size:26px; line-height:32px; font-weight:600;
+  color:var(--ec-fg-100); }
+.tile__note { font-size:11px; color:var(--ec-fg-48); }
+
+/* ---- chart ---- */
+/* Two measures, two fixed hues used everywhere they appear. Both steps were
+   validated against the card surface in each theme: lightness band, chroma
+   floor, CVD separation (ΔE 25 protan / 31 tritan), and 3:1 contrast. */
+:root { --m-visitors:#2b8fe0; --m-downloads:#e06a2a; }
+
+/* the wrapper is the positioning context for the tooltip; height grows with
+   the plot so the x-axis band is never cropped */
+.chartwrap { position:relative; }
+.chart { width:100%; height:auto; display:block; overflow:visible; }
+.chart__grid { stroke:var(--ec-fg-8); stroke-width:1; }
+.chart__tick { font-size:9px; fill:var(--ec-fg-32); font-variant-numeric:tabular-nums; }
+.chart__bar.is-visitors { fill:var(--m-visitors); }
+.chart__bar.is-downloads { fill:var(--m-downloads); }
+/* direct labels wear text tokens, never the series hue */
+.chart__vlabel { font-size:10px; font-weight:500; fill:var(--ec-fg-80); }
+.chart__hit { fill:transparent; }
+.chart__hit:hover { fill:var(--ec-fg-4); }
+
+.chartip { position:absolute; z-index:5; pointer-events:none; min-width:132px;
+  display:flex; flex-direction:column; gap:3px; padding:7px 9px;
+  border-radius:var(--ec-radius); background:var(--ec-popover);
+  border:1px solid var(--border); box-shadow:var(--ec-shadow); }
+.chartip b { font-size:11px; font-weight:500; color:var(--ec-fg-100); }
+.chartip span { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--ec-fg-64); }
+.chartip em { margin-left:auto; font-style:normal; color:var(--ec-fg-100);
+  font-variant-numeric:tabular-nums; }
+
+.legend { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--ec-fg-56); }
+.legend__key { width:10px; height:10px; border-radius:2px; }
+.legend__key--v { background:var(--m-visitors); }
+.legend__key--d { background:var(--m-downloads); }
+
+/* the table twin of the chart sits inside the card, so it keeps the card's edge */
+.atable--chart th:first-child, .atable--chart td:first-child { padding-left:0; }
+.atable--chart th:last-child, .atable--chart td:last-child { padding-right:0; }
+.atable--chart tr:last-child td { border-bottom:none; }
+
+/* bar lists: label / proportional track / count on one grid. Nominal
+   categories, so every row is the measure's one hue — bar length carries the
+   magnitude, and the hue is not spent re-encoding it. Row height clears the
+   24px hover-target minimum. */
+.bars { display:flex; flex-direction:column; }
+.bar { display:grid; grid-template-columns:minmax(0,1fr) 42% 24px; align-items:center;
+  gap:10px; min-height:24px; border-radius:var(--ec-radius);
+  transition:background .12s; }
+.bar:hover, .bar:focus-visible { background:var(--ec-fg-4); outline:none; }
+.bar__label { font-size:12px; color:var(--ec-fg-80); white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; }
+.bar__track { height:8px; border-radius:var(--ec-radius); background:var(--ec-fg-6);
+  overflow:hidden; }
+/* 4px rounded data-end, square where it meets the baseline */
+.bar__fill { display:block; height:100%; border-radius:0 var(--ec-radius) var(--ec-radius) 0;
+  background:var(--m-visitors); }
+.bar__fill.is-visitors { background:var(--m-visitors); }
+.bar__fill.is-downloads { background:var(--m-downloads); }
+.bar__n { font-size:12px; color:var(--ec-fg-64); text-align:right;
+  font-variant-numeric:tabular-nums; }
+/* moderation: one card per waiting request. Built on the store-card anatomy —
+   tinted hero band, body of facts, footer that owns the decision buttons —
+   because the moderator is judging the same object the shop will show. */
+.reqgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 420px)); gap:8px; }
+.reqcard { display:flex; flex-direction:column; overflow:hidden;
+  border:1px solid transparent; border-radius:var(--ec-radius-md); background:var(--ec-fg-4); }
+
+.reqcard__hero { display:flex; align-items:flex-start; gap:10px; padding:12px; }
+.reqcard__logo { width:44px; height:44px; }
+.reqcard__logo svg { width:24px; height:24px; }
+.reqcard__htext { flex:1; min-width:0; padding-top:2px; }
+.reqcard__name { font-size:14px; line-height:18px; font-weight:600; color:var(--ink);
+  overflow:hidden; text-overflow:ellipsis; }
+.reqcard__by { display:flex; align-items:center; gap:6px; margin-top:2px; min-width:0;
+  font-size:11px; color:var(--ink-soft); }
+/* the hero is tinted, so the pill flips to a light plate to stay legible */
+.reqcard__state { flex-shrink:0; background:rgba(255,255,255,.92); color:#1a1405; }
+
+/* body: the facts a decision rests on, each block labelled */
+.reqcard__body { padding:12px; }
+.reqcard__kind { margin-bottom:8px; font-size:12px; font-weight:500; color:var(--ec-fg-96); }
+.reqcard__kv { display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px 16px;
+  font-size:12px; }
+.reqcard__kv span { color:var(--ec-fg-48); }
+.reqcard__kv b { font-weight:400; color:var(--ec-fg-96); min-width:0;
+  overflow:hidden; text-overflow:ellipsis; }
+.reqcard__sec { margin-top:10px; padding-top:10px; border-top:1px solid var(--divider); }
+.reqcard__seclabel { margin-bottom:6px; font-size:11px; color:var(--ec-fg-48); }
+.reqcard__reach { font-size:12px; line-height:18px; color:var(--ec-fg-80); }
+.reqcard__flags { display:flex; flex-wrap:wrap; gap:4px; }
+/* flags are advisory, not blocking — amber outline, not a filled warning */
+.flagtag { display:inline-flex; align-items:center; height:18px; padding:0 8px;
+  border-radius:999px; border:1px solid rgba(235,193,74,.4); font-size:10px; color:var(--ec-amber); }
+/* footer is its own plate so the decision has a place of its own */
+.reqcard__acts { display:flex; align-items:center; gap:6px; margin-top:auto;
+  padding:8px 12px; background:var(--ec-fg-4); border-top:1px solid var(--divider);
+  border-radius:0 0 7px 7px; }
+.reqcard__aspacer { flex:1; }
+.reqcard__acts .btn-secondary { color:var(--op-coral); }
+.reqcard__acts .btn-secondary svg { color:var(--op-coral); }
+.reqcard__acts .btn-secondary:hover { background:rgba(255,112,114,.12);
+  border-color:rgba(255,112,114,.4); }
+.btn-quiet.is-danger { color:var(--op-coral); }
+.btn-quiet.is-danger svg { color:var(--op-coral); }
+.btn-quiet.is-danger:hover { background:rgba(255,112,114,.08); }
+
+/* people + repositories tables */
+.atable--wide td { vertical-align:top; }
+.atable th.num, .atable td.num { text-align:right; }
+.atable .nowrap { white-space:nowrap; }
+.atable .is-good { color:var(--ec-badge); }
+.atable__none { padding:24px 12px; text-align:center; color:var(--ec-fg-32); }
+.person { display:flex; align-items:center; gap:8px; min-width:0; }
+.person .avatar { border-width:0; }
+.person__text { min-width:0; }
+.rolerow { display:flex; flex-wrap:wrap; gap:3px; }
+.youtag { display:inline-flex; align-items:center; height:16px; margin-left:6px; padding:0 6px;
+  border-radius:999px; border:1px solid var(--ec-blue-soft); font-size:9px; color:var(--ec-blue-soft); }
+.howtag { display:inline-flex; align-items:center; height:18px; padding:0 8px;
+  border-radius:999px; background:var(--ec-fg-8); font-size:10px; color:var(--ec-fg-64); }
+.countpill { display:inline-flex; align-items:center; height:20px; padding:0 9px;
+  border-radius:999px; background:var(--ec-fg-8); font-size:11px; color:var(--ec-fg-72);
+  transition:background .12s,color .12s; }
+.countpill.is-quiet { color:var(--ec-fg-32); }
+button.countpill:hover { background:var(--ec-fg-12); color:var(--ec-fg-100); }
+button.countpill.is-on { background:var(--ec-blue-tint); color:var(--ec-blue-soft); }
+
+/* events: kind chips double as the filter, and share the row tag colors */
+.chiprow { display:flex; flex-wrap:wrap; gap:6px; }
+.evchip { display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 8px;
+  border-radius:var(--ec-radius); background:var(--ec-fg-4); border:1px solid transparent;
+  font-size:11px; color:var(--ec-fg-64); transition:border-color .12s,color .12s; }
+.evchip b { font-weight:500; }
+.evchip:hover { color:var(--ec-fg-100); }
+.evchip.is-on { border-color:currentColor; }
+.evtag { display:inline-flex; align-items:center; height:18px; padding:0 8px; flex-shrink:0;
+  border-radius:999px; background:var(--ec-fg-8); font-size:10px; font-weight:500;
+  white-space:nowrap; text-transform:capitalize; }
+/* one hue per meaning: green = accepted, violet = permissions, coral = refused */
+.evchip.is-ok, .evtag.is-ok { background:var(--ec-green-16); color:var(--ec-badge); }
+.evchip.is-blue, .evtag.is-blue { background:var(--ec-blue-tint); color:var(--ec-blue-soft); }
+.evchip.is-violet, .evtag.is-violet { background:rgba(149,132,235,.16); color:var(--op-violet); }
+.evchip.is-bad, .evtag.is-bad { background:rgba(255,112,114,.14); color:#ff9a9b; }
+.evchip.is-plain, .evtag.is-plain { background:var(--ec-fg-8); color:var(--ec-fg-64); }
+
+@media (max-width:760px) {
+  .acct { flex-direction:column; gap:12px; padding:14px; }
+  .acct__nav { width:100%; flex-direction:row; flex-wrap:wrap; }
+  .acct__navsep, .acct__navlabel { display:none; }
+}
+
+/* ============================================================ PUBLISH ===== */
+/* A full-panel page (the sidebar hides). Two routes side by side: the
+   connected GitHub flow and the manual .nupkg upload. */
+.pub { max-width:1080px; margin:0 auto; padding:12px 12px 24px; }
+.pub__h1 { margin:0 0 10px; font-size:13px; line-height:18px; font-weight:500;
+  color:var(--ec-fg-100); }
+.pub__cols { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+  align-items:start; gap:8px; }
+
+.pubcard { display:flex; flex-direction:column; padding:12px;
+  border:1px solid transparent; border-radius:var(--ec-radius-md); background:var(--ec-fg-4); }
+.pubcard__head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.pubcard__icon { width:16px; height:16px; flex-shrink:0; color:var(--ec-fg-72); }
+.pubcard__title { font-size:12px; line-height:16px; font-weight:500; color:var(--ec-fg-100); }
+/* quiet outline pill — same geometry as the tag pills, blue ink */
+.pubtag { display:inline-flex; align-items:center; height:18px; padding:0 8px; flex-shrink:0;
+  border-radius:999px; border:1px solid var(--ec-blue-soft); background:var(--ec-blue-tint);
+  font-size:10px; font-weight:500; color:var(--ec-blue-soft); }
+
+.pubintro, .pubnote { font-size:11px; line-height:16px; color:var(--ec-fg-72); }
+.pubintro { margin-bottom:8px; }
+.pubnote { margin-top:auto; padding-top:10px; color:var(--ec-fg-56); }
+
+/* numbered steps: the counter sits in a fixed 18px gutter so the text aligns */
+.publist { margin:0; padding:0; list-style:none; counter-reset:step;
+  display:flex; flex-direction:column; gap:8px; }
+.publist li { counter-increment:step; position:relative; padding-left:22px;
+  font-size:11px; line-height:16px; color:var(--ec-fg-80); }
+.publist li::before { content:counter(step) '.'; position:absolute; left:0; top:0;
+  width:18px; font-variant-numeric:tabular-nums; color:var(--ec-fg-48); }
+.publist b { font-weight:500; color:var(--ec-fg-100); }
+.pubcard code { padding:1px 4px; border-radius:3px; background:var(--ec-fg-8);
+  font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace; font-size:11px;
+  color:var(--ec-fg-96); }
+
+.publink { color:var(--ec-blue-soft); text-decoration:none; }
+.publink:hover { text-decoration:underline; }
+
+/* progressive disclosure for the terminal variant */
+.pubmore { margin-top:4px; }
+.pubmore summary { display:inline-flex; align-items:center; gap:5px; cursor:pointer;
+  font-size:12px; color:var(--ec-fg-56); list-style:none; }
+.pubmore summary::-webkit-details-marker { display:none; }
+.pubmore summary::before { content:''; width:0; height:0; flex-shrink:0;
+  border:4px solid transparent; border-left-color:var(--ec-fg-48);
+  transition:transform .12s; }
+.pubmore[open] summary::before { transform:rotate(90deg) translateX(1px); }
+.pubmore summary:hover { color:var(--ec-fg-100); }
+.pubcode { margin:6px 0 0; padding:8px 10px; border-radius:var(--ec-radius);
+  background:var(--ec-fg-4); border:1px solid var(--divider);
+  font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace; font-size:11px;
+  line-height:16px; color:var(--ec-fg-96); overflow-x:auto;
+  -webkit-user-select:text; user-select:text; }
+
+.pubcard__foot { display:flex; align-items:center; gap:4px; margin-top:10px; }
+.btn-link { display:inline-flex; align-items:center; height:24px; padding:0 8px;
+  border-radius:var(--ec-radius); font-size:12px; color:var(--ec-blue-soft);
+  transition:background .12s; }
+.btn-link:hover { background:var(--ec-fg-8); }
+
+/* the drop target reads as an action, not a filled button */
+.pubdrop { margin-top:10px; height:28px; width:100%; border-radius:var(--ec-radius);
+  background:transparent; border:1px dashed var(--ec-blue-soft); font-size:12px;
+  color:var(--ec-blue-soft); transition:background .12s; }
+.pubdrop:hover { background:var(--ec-blue-tint); }
+
+@media (max-width:820px) { .pub__cols { grid-template-columns:1fr; } }
+
+/* toast for stubbed actions */
+.toast { position:fixed; z-index:90; left:50%; bottom:24px; transform:translateX(-50%);
+  display:flex; align-items:center; gap:8px; padding:8px 12px;
+  border-radius:var(--ec-radius-md); background:var(--ec-popover); border:1px solid var(--border);
+  box-shadow:var(--ec-shadow); font-size:12px; color:var(--ec-fg-96);
+  opacity:0; pointer-events:none; transition:opacity .18s; }
+.toast.is-shown { opacity:1; }
+.toast svg { width:14px; height:14px; color:var(--ec-fg-56); }
+
+/* card grid steps down as the window narrows, so a card never gets thinner
+   than it needs for its title + meta line */
+@media (max-width:1600px) { .xgrid { grid-template-columns:repeat(4, minmax(0,1fr)); } }
+@media (max-width:1280px) { .xgrid { grid-template-columns:repeat(3, minmax(0,1fr)); } }
+@media (max-width:960px)  { .xgrid { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+
+/* ================================================================ PHONE === */
+@media (max-width:640px) {
+  .main { padding:8px; gap:8px; }
+  .side { display:none; }
+  .header__user span { display:none; }
+  .btn-quiet { font-size:0; gap:0; padding:0 6px; }
+  .header .search { width:150px; }
+  .xgrid { grid-template-columns:1fr; padding:8px; }
+  .xrow__kind, .xrow__ver { display:none; }
+}
