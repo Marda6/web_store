@@ -1234,6 +1234,8 @@ const EV_KINDS = {
   'github unlinked':    'is-plain',
   'extension unlisted': 'is-plain',
   'extension listed':   'is-ok',
+  'taxonomy changed':   'is-plain',
+  'trial issued':       'is-plain',
 };
 
 const EVENTS = [
@@ -1250,38 +1252,52 @@ const EVENTS = [
   { when:'03 Aug, 15:21', kind:'trusted publisher set', who:'k.belousov@encycam.com', what:'EncyMascot', link:true,
     det:'Connected kbelousov-ency/EncyMascot (name reserved, nothing published yet)' },
   { when:'03 Aug, 14:55', kind:'extension published', who:'liullinil@encycam.com', what:'ency3check', link:true, det:'v0.1.4' },
+  { when:'02 Aug, 09:12', kind:'taxonomy changed', who:'ruslan.m@encycam.io', what:'—', det:'+ cladding, + fdm tags' },
+  { when:'01 Aug, 18:40', kind:'github unlinked', who:'aynur@encycam.io', what:'aynur-dev', det:'personal account' },
+  { when:'01 Aug, 12:02', kind:'trial issued', who:'sven@encycam.com', what:'Export project information', link:true,
+    det:'30-day trial' },
   { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'cyrulinas@sprutcam.com', det:'+ admin' },
   { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'rmhusainov@sprut.com', det:'+ admin' },
   { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'marat@encycam.io', det:'+ admin' },
   { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'dinarz@sprut.ru', det:'+ admin' },
+  { when:'28 Jul, 16:45', kind:'extension listed', who:'t.ga.liullin@gmail.com', what:'slopeanalyzer', link:true,
+    det:'Restored after review' },
+  { when:'28 Jul, 16:20', kind:'extension unlisted', who:'t.ga.liullin@gmail.com', what:'slopeanalyzer', link:true,
+    det:'Broken package reported, pulled for review' },
   { when:'24 Jul, 11:08', kind:'extension rejected', who:'t.ga.liullin@gmail.com', what:'ency3check', link:true,
     det:'v0.1.3 — crashed on load' },
 ];
 
-/* the chip row counts by kind — total first, then busiest kinds. Kinds that
-   share a noun (extension …, github …) fold into a bracketed group: the noun
-   is written once on the group's edge, the chips keep only their verb */
-const EV_CHIP_GROUPS = [['extension', 'extension '], ['github', 'github ']];
+/* the kind filter is a left rail — the vocabulary is long and keeps growing.
+   Kinds fold into fixed groups; prefixed kinds drop the shared noun (the group
+   label already says it). Within a group busiest first. */
+const EV_NAV = [
+  ['Extension', k => k.startsWith('extension ')],
+  ['GitHub',    k => k.startsWith('github ')],
+  ['People',    k => ['role change', 'user joined', 'profiles synced'].includes(k)],
+  ['Store',     k => ['trusted publisher set', 'taxonomy changed', 'trial issued'].includes(k)],
+];
 
-function eventChips() {
+function eventNav() {
   const map = new Map();
   for (const e of EVENTS) map.set(e.kind, (map.get(e.kind) || 0) + 1);
   const rows = [...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  /* a bracket only pays for itself from two chips up — a lone kind stays a
-     plain chip with its full name */
-  const groups = EV_CHIP_GROUPS.map(([label, prefix]) => ({
-    label, prefix,
+  const used = new Set();
+  const groups = EV_NAV.map(([label, test]) => ({
+    label,
     /* [kind, count, short label] */
-    chips: rows.filter(([k]) => k.startsWith(prefix)).map(([k, n]) => [k, n, k.slice(prefix.length)]),
-  })).filter(g => g.chips.length >= 2);
-  const loose = rows.filter(([k]) => !groups.some(g => k.startsWith(g.prefix)))
-    .map(([k, n]) => [k, n, k]);
-  return { groups, loose };
+    kinds: rows.filter(([k]) => test(k) && !used.has(k) && used.add(k))
+      .map(([k, n]) => [k, n, k.replace(/^(extension|github) /, '')]),
+  })).filter(g => g.kinds.length);
+  const rest = rows.filter(([k]) => !used.has(k)).map(([k, n]) => [k, n, k]);
+  if (rest.length) groups.push({ label:'Other', kinds:rest });
+  return groups;
 }
 
-function eventChip([k, n, label]) {
-  return `<button class="evchip ${EV_KINDS[k] || 'is-plain'} ${k === state.eventKind ? 'is-on' : ''}"
-    data-aevent="${esc(k)}">${esc(label)}<b>${n}</b></button>`;
+function evNavRow([k, n, label]) {
+  return `<button class="evrow ${k === state.eventKind ? 'is-on' : ''}" data-aevent="${esc(k)}">
+    <i class="evrow__dot ${EV_KINDS[k] || 'is-plain'}"></i>
+    <span>${esc(label)}</span><i class="evrow__n">${n}</i></button>`;
 }
 
 function acctEvents() {
@@ -1290,35 +1306,36 @@ function acctEvents() {
   if (q) list = list.filter(e =>
     (e.who + e.what + e.det + e.kind).toLowerCase().includes(q));
   return `
-  <div class="acct__toolbar">
-    <span class="acct__hspacer"></span>
-    <div class="search" style="width:300px;max-width:none">
-      <svg><use href="#i-search"/></svg>
-      <input class="field" id="eventSearch" type="text" placeholder="Search events" value="${esc(state.eventQuery)}" />
+  <div class="evwrap">
+    <aside class="evnav">
+      <button class="evrow ${state.eventKind === 'all' ? 'is-on' : ''}" data-aevent="all">
+        <i class="evrow__dot is-plain"></i><span>All</span><i class="evrow__n">${EVENTS.length}</i></button>
+      ${eventNav().map(g => `
+        <div class="evnav__label">${esc(g.label)}</div>
+        ${g.kinds.map(evNavRow).join('')}`).join('')}
+    </aside>
+    <div class="evmain">
+      <div class="acct__toolbar">
+        <div class="search" style="width:300px;max-width:none">
+          <svg><use href="#i-search"/></svg>
+          <input class="field" id="eventSearch" type="text" placeholder="Search events" value="${esc(state.eventQuery)}" />
+        </div>
+      </div>
+      <div class="acard acard--flush">
+        <table class="atable atable--wide">
+          <thead><tr><th>When</th><th>Event</th><th>Who</th><th>What</th><th>Details</th></tr></thead>
+          <tbody>${list.length ? list.map(e => `
+            <tr>
+              <td class="nowrap">${e.when}</td>
+              <td><span class="evtag ${EV_KINDS[e.kind] || 'is-plain'}">${e.kind}</span></td>
+              <td class="nowrap">${esc(e.who)}</td>
+              <td>${e.link ? `<button class="publink" data-aact="open-ext">${esc(e.what)}</button>` : esc(e.what)}</td>
+              <td class="${e.good ? 'is-good' : ''}">${esc(e.det)}</td>
+            </tr>`).join('')
+            : `<tr><td colspan="5" class="atable__none">No events match that search</td></tr>`}</tbody>
+        </table>
+      </div>
     </div>
-  </div>
-  <div class="chiprow">
-    ${eventChip(['all', EVENTS.length, 'all'])}
-    ${eventChips().groups.map(g => `
-      <span class="chipgroup">
-        <span class="chipgroup__label">${esc(g.label)}</span>
-        ${g.chips.map(eventChip).join('')}
-      </span>`).join('')}
-    ${eventChips().loose.map(eventChip).join('')}
-  </div>
-  <div class="acard acard--flush" style="margin-top:8px">
-    <table class="atable atable--wide">
-      <thead><tr><th>When</th><th>Event</th><th>Who</th><th>What</th><th>Details</th></tr></thead>
-      <tbody>${list.length ? list.map(e => `
-        <tr>
-          <td class="nowrap">${e.when}</td>
-          <td><span class="evtag ${EV_KINDS[e.kind] || 'is-plain'}">${e.kind}</span></td>
-          <td class="nowrap">${esc(e.who)}</td>
-          <td>${e.link ? `<button class="publink" data-aact="open-ext">${esc(e.what)}</button>` : esc(e.what)}</td>
-          <td class="${e.good ? 'is-good' : ''}">${esc(e.det)}</td>
-        </tr>`).join('')
-        : `<tr><td colspan="5" class="atable__none">No events match that search</td></tr>`}</tbody>
-    </table>
   </div>`;
 }
 
