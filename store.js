@@ -139,7 +139,7 @@ const EXTS = [
     long:['Imports SVG files as sketch curves: paths, arcs and text outlines land on the selected work plane with correct scaling. Curves are grouped per SVG layer.'] },
   { id:'loading-game', name:'Loading Game', kind:'global', pub:'EncySoftware',
     ver:'v0.1.5', installs:280, upd:'2026-06-30', tags:['game','global'],
-    art:'a-game', hue:'#eb84e0',
+    art:'a-game', hue:'#eb84e0', cover:'assets/shots/city.svg',
     pkg:'LoadingGame', requires:'ENCY ≥ 3.0.0',
     license:'MIT', support:'support@encycam.com',
     shots:['assets/shots/fav-training.png'],
@@ -173,7 +173,7 @@ const state = {
   /* scope + favsOnly narrow what the list is drawn from; the sidebar filters
      then work inside that. `filters` is whether the sidebar is shown at all. */
   scope:'all', favsOnly:false, filters:true, shot:0, aboutOpen:false,
-  range:30, repoFilter:'all', eventKind:'all', eventQuery:'', chartTable:false,
+  range:30, repoFilter:'all', eventKind:'all', eventQuery:'', chartTable:false, modSel:null,
   favs:new Set(['directcladding','export-info']),
   installed:new Set(),
 };
@@ -346,9 +346,12 @@ function actionBtn(e) {
 
 function card(e) {
   const tint = `xcard--tint ${KIND_TINT[e.kind] || ''}`;
+  /* an optional cover sits under the hero tint; the tint then thins into a
+     gradient so the artwork shows through while the name keeps its plate */
+  const cover = e.cover ? ` style="--cover:url('${esc(e.cover)}')"` : '';
   return `
-  <button class="xcard ${tint}" style="--xc:${e.hue}" data-id="${e.id}">
-    <span class="xcard__hero">
+  <button class="xcard ${tint} ${e.cover ? 'xcard--cover' : ''}" style="--xc:${e.hue}" data-id="${e.id}">
+    <span class="xcard__hero"${cover}>
       <span class="xcard__hrow">
         <span class="xlogo xcard__logo"><svg><use href="#${e.art}"/></svg></span>
         <span class="xcard__htext">
@@ -578,41 +581,57 @@ const ROLE_TONE = { Admin:'is-admin', Customer:'is-customer', Publisher:'is-publ
 
 function acctProfile() {
   return `
-  <div class="acard acard--facts">
-    <div class="fact"><div class="fact__label">Email</div><div class="fact__value">${esc(ME.email)}</div></div>
-    <div class="fact"><div class="fact__label">Username</div><div class="fact__value">${esc(ME.username)}</div></div>
-    <div class="fact">
-      <div class="fact__label">Roles</div>
-      <div class="fact__value">
-        ${ME.roles.map(r => `<span class="roletag ${ROLE_TONE[r] || ''}">${esc(r)}</span>`).join('')}
-        <button class="acct__hint" data-aact="roles">what these mean</button>
+  <div class="acard">
+    <div class="acct__factgrid">
+      <div class="fact"><div class="fact__label">Email</div><div class="fact__value">${esc(ME.email)}</div></div>
+      <div class="fact">
+        <div class="fact__label">Roles</div>
+        <div class="fact__value">
+          ${ME.roles.map(r => `<span class="roletag ${ROLE_TONE[r] || ''}">${esc(r)}</span>`).join('')}
+          <button class="acct__hint" data-aact="roles">what these mean</button>
+        </div>
       </div>
+      <div class="fact"><div class="fact__label">Username</div><div class="fact__value">${esc(ME.username)}</div></div>
+      <div class="fact"><div class="fact__label">Joined</div><div class="fact__value">${fmtDate(ME.joined)}</div></div>
     </div>
-    <div class="fact"><div class="fact__label">Joined</div><div class="fact__value">${fmtDate(ME.joined)}</div></div>
+    <div class="acct__proffoot">
+      <button class="btn-secondary" data-aact="logout"><svg><use href="#i-logout"/></svg>Logout</button>
+    </div>
   </div>
 
   <div class="acard">
-    <div class="acard__head">
-      <svg class="acard__icon"><use href="#i-github"/></svg>
-      <h2 class="acard__title">Publishing from GitHub</h2>
-    </div>
-    <p class="acard__lead">Link your GitHub once and every repository of yours can publish — you never put
-      a password or a token in the repository.
-      <button class="publink" data-aact="steps">All the steps</button></p>
-    <div class="acct__signin">
-      <button class="btn-primary" data-aact="github"><svg><use href="#i-github"/></svg>Sign in with GitHub</button>
-      <span class="acct__aside">Once, and then no repository of yours needs connecting at all.</span>
-    </div>
-    <p class="acct__warn"><svg><use href="#i-warn"/></svg>GitHub links whoever you are signed in as there, not who you are
-      here. Check that first, or use a private window — a personal account already linked to somebody else moves to you.</p>
-    <div class="acct__connect">
-      <input class="field" id="repoField" type="text" placeholder="paste the repository link" />
-      <button class="btn-secondary" data-aact="connect" disabled>Connect</button>
-    </div>
-  </div>
+    <div class="ghcols">
+      <div class="ghintro">
+        <div class="acard__head">
+          <svg class="acard__icon"><use href="#i-github"/></svg>
+          <h2 class="acard__title">Publishing from GitHub</h2>
+        </div>
+        <p class="acard__lead">Extensions publish straight from your repositories — no passwords or
+          tokens ever land in the code. <button class="publink" data-aact="steps">All the steps</button></p>
+        <p class="acct__warn"><svg><use href="#i-warn"/></svg>GitHub links whoever you are signed in as there, not who you are
+          here. Check that first, or use a private window — a personal account already linked to somebody else moves to you.</p>
+      </div>
 
-  <div class="acct__foot">
-    <button class="btn-secondary" data-aact="logout"><svg><use href="#i-logout"/></svg>Logout</button>
+      <div class="ghways">
+        <div class="ghopt ghopt--split">
+          <div class="ghopt__text">
+            <div class="ghopt__title">Link your GitHub account</div>
+            <div class="ghopt__sum">Once, and then every repository of yours can publish — nothing to connect per project.</div>
+          </div>
+          <button class="btn-primary ghopt__cta" data-aact="github"><svg><use href="#i-github"/></svg>Sign in with GitHub</button>
+        </div>
+        <div class="ghopt ghopt--split">
+          <div class="ghopt__text">
+            <div class="ghopt__title">Or connect one repository</div>
+            <div class="ghopt__sum">Without linking the account — only the repository you paste here can publish.</div>
+          </div>
+          <div class="acct__connect">
+            <input class="field" id="repoField" type="text" placeholder="paste the repository link" />
+            <button class="btn-secondary" data-aact="connect" disabled>Connect</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>`;
 }
 
@@ -636,8 +655,13 @@ function acctPublished() {
         const st = PUB_STATE[p.state];
         return `<tr>
           <td>
-            <span class="atable__name" data-aopen="${p.ext}">${esc(e.name || p.ext)}</span>
-            <span class="atable__sub">${KINDS[e.kind] || ''}</span>
+            <span class="atable__id">
+              <span class="xlogo atable__logo" style="--xc:${e.hue || '#8a9299'}"><svg><use href="#${e.art || 'a-puzzle'}"/></svg></span>
+              <span class="atable__idtext">
+                <span class="atable__name" data-aopen="${p.ext}">${esc(e.name || p.ext)}</span>
+                <span class="atable__sub">${KINDS[e.kind] || ''}</span>
+              </span>
+            </span>
           </td>
           <td>${esc(p.ver)}</td>
           <td>${fmtDate(p.when)}</td>
@@ -857,57 +881,139 @@ function acctStats() {
 /* ---------------------------- admin: moderation ------------------------- */
 
 /* `art`/`hue` are null when the package ships no icon — the hero falls back to
-   the neutral puzzle glyph, and the missing icon is one of the flags below */
+   the neutral puzzle glyph, and the missing icon is one of the flags below.
+   `desc` is the submitted store description ('' = missing), `reach` lists what
+   a quick scan of the package saw, `history` is the publisher's track record —
+   the fastest signal an admin has for how much scrutiny a submission needs. */
 const REQUESTS = [
   { id:'ency3check', name:'Ency3Check', kind:'utility', pkg:'Ency3Check', pub:'hazrat',
-    ver:'v0.1.4', when:'23 h ago', repo:'lenar-robotics/Ency3Check',
-    art:null, hue:null,
-    flags:['no description','no icon'], reach:'nothing notable' },
+    ver:'v0.1.4', when:'23 h ago', repo:'lenar-robotics/Ency3Check', size:'1.2 MB',
+    requires:'ENCY ≥ 3.0.0', art:null, hue:null,
+    desc:'',
+    flags:['no description','no icon'],
+    reach:['nothing notable'],
+    history:{ published:0, note:'first submission from this publisher' },
+    prev:[['0.1.3','rejected — crashed on load','12 d ago'],['0.1.1','rejected — no description','20 d ago']] },
+  { id:'viewcube', name:'ViewCube hotkeys', kind:'utility', pkg:'ViewCubeHotkeys', pub:'kbelousov-ency',
+    ver:'v1.1.0', when:'2 d ago', repo:'kbelousov-ency/ViewCubeHotkeys', size:'0.4 MB',
+    requires:'ENCY ≥ 3.0.0', art:'a-term', hue:'#84ebb8',
+    desc:'Adds keyboard shortcuts for the ViewCube: numpad snaps to the six faces, Shift-numpad to corners.',
+    flags:[],
+    reach:['keyboard hooks (global shortcuts)'],
+    history:{ published:4, note:'4 extensions in the catalog, none rejected' },
+    prev:[['1.0.0','approved','3 mo ago']] },
 ];
+
+/* prototype-live: a decision moves the request out of the queue */
+const DECIDED = [];
+
+function modSelected() {
+  return REQUESTS.find(r => r.id === state.modSel) || REQUESTS[0];
+}
+
+/* queue rows: enough to pick an item — who, what, how long it has waited,
+   and whether the scan flagged anything */
+function modQueue(sel) {
+  return `
+  <div class="modq">
+    ${REQUESTS.map(r => `
+      <button class="modq__row ${r.id === sel.id ? 'is-on' : ''}" data-amod="${r.id}">
+        <span class="xlogo modq__logo" style="--xc:${r.hue || '#8a9299'}"><svg><use href="#${r.art || 'a-puzzle'}"/></svg></span>
+        <span class="modq__text">
+          <span class="modq__name">${esc(r.name)}</span>
+          <span class="modq__sub">${esc(r.ver)} · ${esc(r.pub)}</span>
+        </span>
+        <span class="modq__side">
+          <span class="modq__when">${r.when}</span>
+          ${r.flags.length ? `<span class="modq__flags">${r.flags.length} flag${r.flags.length > 1 ? 's' : ''}</span>` : ''}
+        </span>
+      </button>`).join('')}
+    ${DECIDED.length ? `<div class="modq__done">${DECIDED.length} decided this session</div>` : ''}
+  </div>`;
+}
+
+/* review pane: everything a decision rests on, worst news first —
+   flags, then the code scan, then what the shop page will show */
+function modReview(r) {
+  return `
+  <section class="modv">
+    <div class="modv__hero xcard--tint ${KIND_TINT[r.kind] || ''}" style="--xc:${r.hue || '#8a9299'}">
+      <span class="xlogo reqcard__logo"><svg><use href="#${r.art || 'a-puzzle'}"/></svg></span>
+      <div class="reqcard__htext">
+        <h2 class="reqcard__name">${esc(r.name)}</h2>
+        <div class="reqcard__by">${esc(r.ver)}<i class="xcard__bysep"></i>by ${esc(r.pub)}
+          <i class="xcard__bysep"></i>${KINDS[r.kind]}</div>
+      </div>
+      <span class="statetag is-wait reqcard__state">waiting ${r.when.replace(' ago', '')}</span>
+    </div>
+
+    <div class="modv__body">
+      <div class="modv__cols">
+        <div class="modv__main">
+          ${r.flags.length ? `
+          <div class="modv__block">
+            <div class="reqcard__seclabel">Needs a look</div>
+            <div class="reqcard__flags">${r.flags.map(f => `<span class="flagtag">${esc(f)}</span>`).join('')}</div>
+          </div>` : ''}
+
+          <div class="modv__block">
+            <div class="reqcard__seclabel">What the code reaches for</div>
+            <ul class="modv__reach">${r.reach.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+          </div>
+
+          <div class="modv__block">
+            <div class="reqcard__seclabel">Store description, as submitted</div>
+            ${r.desc ? `<p class="reqcard__reach">${esc(r.desc)}</p>`
+                     : `<p class="modv__none">none — the card will show only the name</p>`}
+          </div>
+
+          <div class="modv__block">
+            <div class="reqcard__seclabel">Previous submissions</div>
+            ${r.prev.length ? `<div class="modv__prev">${r.prev.map(([v, what, when]) => `
+              <div class="modv__prevrow"><b>${v}</b><span>${esc(what)}</span><i>${when}</i></div>`).join('')}</div>`
+              : `<p class="modv__none">none</p>`}
+          </div>
+        </div>
+
+        <aside class="modv__facts">
+          <div class="reqcard__kv">
+            <span>Package id</span><b>${esc(r.pkg)}</b>
+            <span>Built from</span><b><button class="publink" data-aact="open-repo">${esc(r.repo)}</button></b>
+            <span>Submitted</span><b>${r.when}</b>
+            <span>Size</span><b>${r.size}</b>
+            <span>Requires</span><b>${esc(r.requires)}</b>
+          </div>
+          <div class="modv__pub">
+            <div class="reqcard__seclabel">Publisher</div>
+            <button class="publink" data-aact="open-person">${esc(r.pub)}</button>
+            <p class="modv__pubnote">${esc(r.history.note)}</p>
+          </div>
+          <div class="modv__tools">
+            <button class="btn-quiet" data-aact="download"><svg><use href="#i-download"/></svg>Download package</button>
+            <button class="btn-quiet" data-aact="open-repo"><svg><use href="#i-github"/></svg>Open on GitHub</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <div class="reqcard__acts">
+      <button class="btn-approve" data-amoddec="approve"><svg><use href="#i-check-circle"/></svg>Approve</button>
+      <button class="btn-quiet is-danger" data-amoddec="reject"><svg><use href="#i-ban"/></svg>Reject</button>
+      <span class="reqcard__aspacer"></span>
+      <span class="modv__hint">Approve lists it in the catalog; reject returns it to the publisher with a note.</span>
+    </div>
+  </section>`;
+}
 
 function acctModeration() {
   if (!REQUESTS.length) {
-    return emptyCard('Nothing waiting — new submissions land here.', 'stats', 'i-chart', 'Open statistics');
+    return emptyCard(
+      DECIDED.length ? `Queue clear — ${DECIDED.length} decided this session.`
+                     : 'Nothing waiting — new submissions land here.',
+      'stats', 'i-chart', 'Open statistics');
   }
-  /* same anatomy as the store card — tinted hero, body, footer of actions — so
-     a moderator judges the submission as the shop will show it */
-  return `<div class="reqgrid">${REQUESTS.map(r => `
-    <section class="reqcard xcard--tint ${KIND_TINT[r.kind] || ''}" style="--xc:${r.hue || '#8a9299'}">
-      <div class="reqcard__hero">
-        <span class="xlogo reqcard__logo"><svg><use href="#${r.art || 'a-puzzle'}"/></svg></span>
-        <div class="reqcard__htext">
-          <h2 class="reqcard__name">${esc(r.name)}</h2>
-          <div class="reqcard__by">${esc(r.ver)}<i class="xcard__bysep"></i>by ${esc(r.pub)}</div>
-        </div>
-        <span class="statetag is-wait reqcard__state">on moderation</span>
-      </div>
-
-      <div class="reqcard__body">
-        <div class="reqcard__kind">${KINDS[r.kind]}</div>
-        <div class="reqcard__kv">
-          <span>Package id</span><b>${esc(r.pkg)}</b>
-          <span>Submitted</span><b>${r.when}</b>
-          <span>Built from</span><b><button class="publink" data-aact="open-repo">${esc(r.repo)}</button></b>
-        </div>
-
-        <div class="reqcard__sec">
-          <div class="reqcard__seclabel">Needs a look</div>
-          <div class="reqcard__flags">${r.flags.map(f => `<span class="flagtag">${esc(f)}</span>`).join('')}</div>
-        </div>
-        <div class="reqcard__sec">
-          <div class="reqcard__seclabel">What the code reaches for</div>
-          <p class="reqcard__reach">${esc(r.reach)}</p>
-        </div>
-      </div>
-
-      <div class="reqcard__acts">
-        <button class="btn-primary" data-aact="approve"><svg><use href="#i-check-circle"/></svg>Approve</button>
-        <button class="btn-secondary" data-aact="reject"><svg><use href="#i-ban"/></svg>Reject</button>
-        <span class="reqcard__aspacer"></span>
-        <button class="acticon" data-aact="download" title="Download package"><svg><use href="#i-download"/></svg></button>
-        <button class="acticon" data-aact="open-repo" title="Open on GitHub"><svg><use href="#i-github"/></svg></button>
-      </div>
-    </section>`).join('')}</div>`;
+  const sel = modSelected();
+  return `<div class="mod">${modQueue(sel)}${modReview(sel)}</div>`;
 }
 
 /* ---------------------------- admin: people ----------------------------- */
@@ -935,20 +1041,40 @@ const PEOPLE = [
     roles:['customer','admin'], pubs:0, lic:0, seen:'1 d ago' },
 ];
 
+/* real filters: scope chips + search combine; counts derive from the data */
+const PEOPLE_SCOPES = [
+  ['all', 'All'], ['admin', 'Admins'], ['publisher', 'Publishers'], ['blocked', 'Blocked'],
+];
+
+function peopleCount(id) {
+  if (id === 'all') return PEOPLE.length;
+  if (id === 'blocked') return PEOPLE.filter(p => p.blocked).length;
+  return PEOPLE.filter(p => p.roles.includes(id)).length;
+}
+
+function filteredPeople() {
+  const q = (state.peopleQuery || '').trim().toLowerCase();
+  const s = state.peopleScope || 'all';
+  return PEOPLE.filter(p =>
+    (s === 'all' || (s === 'blocked' ? p.blocked : p.roles.includes(s)))
+    && (!q || (p.email + p.name + p.co).toLowerCase().includes(q)));
+}
+
 function acctPeople() {
-  const admins = PEOPLE.filter(p => p.roles.includes('admin')).length;
+  const s = state.peopleScope || 'all';
   return `
   <div class="acct__toolbar">
-    <div class="search" style="width:300px;max-width:none">
-      <svg><use href="#i-search"/></svg>
-      <input class="field" id="peopleSearch" type="text" placeholder="Search by email, name or company" />
-    </div>
+    ${PEOPLE_SCOPES.map(([id, label]) => `
+      <button class="fchip ${s === id ? 'is-active' : ''} ${!peopleCount(id) && s !== id ? 'is-dim' : ''}" data-ppl="${id}">
+        ${label}<span class="fchip__cnt">${peopleCount(id)}</span>
+      </button>`).join('')}
     <span class="acct__hspacer"></span>
+    <div class="search" style="width:240px">
+      <svg><use href="#i-search"/></svg>
+      <input class="field" id="peopleSearch" type="text" placeholder="Search by email, name or company"
+        value="${esc(state.peopleQuery || '')}" />
+    </div>
     <button class="btn-quiet" data-aact="sync"><svg><use href="#i-refresh"/></svg>Sync profiles</button>
-  </div>
-  <div class="acct__meta">
-    <span class="countpill">${admins} admins</span>
-    <span class="countpill is-quiet">0 blocked</span>
   </div>
   <div class="acard acard--flush">
     <table class="atable atable--wide">
@@ -956,15 +1082,15 @@ function acctPeople() {
         <th>Person</th><th>Company</th><th>Roles</th>
         <th class="num">Published</th><th class="num">Licenses</th><th>Last seen</th><th></th>
       </tr></thead>
-      <tbody id="peopleRows">${peopleRows(PEOPLE)}</tbody>
+      <tbody id="peopleRows">${peopleRows(filteredPeople())}</tbody>
     </table>
   </div>`;
 }
 
 function peopleRows(list) {
-  if (!list.length) return `<tr><td colspan="7" class="atable__none">Nobody matches that search</td></tr>`;
+  if (!list.length) return `<tr><td colspan="7" class="atable__none">Nobody matches these filters</td></tr>`;
   return list.map(p => `
-    <tr>
+    <tr class="${p.blocked ? 'is-blocked' : ''}">
       <td>
         <span class="person">
           <span class="avatar" style="--av:${p.roles.includes('publisher') ? 'var(--op-green)' : 'var(--op-blue)'}">
@@ -977,13 +1103,15 @@ function peopleRows(list) {
       </td>
       <td>${esc(p.co) || '—'}</td>
       <td><span class="rolerow">${p.roles.map(r =>
-        `<span class="roletag ${ROLE_TONE[r[0].toUpperCase() + r.slice(1)] || ''}">${esc(r)}</span>`).join('')}</span></td>
+        `<span class="roletag ${ROLE_TONE[r[0].toUpperCase() + r.slice(1)] || ''}">${esc(r)}</span>`).join('')}${
+        p.blocked ? '<span class="roletag is-blocked">blocked</span>' : ''}</span></td>
       <td class="num">${p.pubs ? `<button class="publink" data-aact="open-pubs">${p.pubs}</button>` : '—'}</td>
       <td class="num">${p.lic || '—'}</td>
       <td class="nowrap">${p.seen}</td>
       <td class="atable__act">
-        <button class="acticon" data-aact="history" title="History"><svg><use href="#i-history"/></svg></button>
-        <button class="acticon" data-aact="block" title="Block"><svg><use href="#i-ban"/></svg></button>
+        <button class="acticon" data-aact="history" data-mail="${esc(p.email)}" title="History"><svg><use href="#i-history"/></svg></button>
+        <button class="acticon ${p.blocked ? 'is-on' : ''}" data-aact="block" data-mail="${esc(p.email)}"
+          title="${p.blocked ? 'Unblock' : 'Block'}"><svg><use href="#i-ban"/></svg></button>
       </td>
     </tr>`).join('');
 }
@@ -1019,58 +1147,87 @@ const REPO_STATE = {
   held:      { label:'name held',     tone:'is-wait' },
 };
 
+/* real filters, same recipe as People: scope chips + search combine */
+const REPO_SCOPES = [
+  ['all', 'All'], ['published', 'Published'], ['moderation', 'On moderation'], ['held', 'Name held'],
+];
+
+function repoCount(id) {
+  return id === 'all' ? REPOS.length : REPOS.filter(r => r.state === id).length;
+}
+
+function filteredRepos() {
+  const q = (state.repoQuery || '').trim().toLowerCase();
+  const s = state.repoFilter || 'all';
+  return REPOS.filter(r => (s === 'all' || r.state === s)
+    && (!q || `${r.ext} ${r.repo} ${r.by} ${r.co}`.toLowerCase().includes(q)));
+}
+
+function repoRows(list) {
+  if (!list.length) return `<tr><td colspan="8" class="atable__none">No repositories match these filters</td></tr>`;
+  return list.map(r => {
+    const st = REPO_STATE[r.state];
+    return `<tr>
+      <td><button class="publink" data-aact="open-ext">${esc(r.ext)}</button></td>
+      <td><button class="publink" data-aact="open-repo">${esc(r.repo)}</button></td>
+      <td class="nowrap">${r.build}</td>
+      <td>
+        <button class="publink" data-aact="open-person">${esc(r.by)}</button>
+        ${r.co ? `<span class="atable__sub">${esc(r.co)}</span>` : ''}
+      </td>
+      <td class="nowrap">${r.conn}</td>
+      <td><span class="howtag">${r.how}</span></td>
+      <td>
+        <span class="statetag ${st.tone}">${st.label}</span>
+        <span class="atable__sub">${r.when}</span>
+      </td>
+      <td class="atable__act">
+        <button class="acticon" data-aact="unlist" title="Unlist"><svg><use href="#i-eye-off"/></svg></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
 function acctRepos() {
-  const held = REPOS.filter(r => r.state === 'held').length;
-  const list = state.repoFilter === 'held' ? REPOS.filter(r => r.state === 'held') : REPOS;
+  const s = state.repoFilter || 'all';
   return `
-  <div class="acct__meta">
-    <button class="countpill ${state.repoFilter === 'all' ? 'is-on' : ''}" data-arepo="all">all</button>
-    <button class="countpill ${state.repoFilter === 'held' ? 'is-on' : ''}" data-arepo="held">${held} held</button>
-  </div>
   <p class="acard__lead">Every publisher's bindings — your own are on
     <button class="publink" data-aact="to-profile">Profile</button>.</p>
   <p class="acct__caption" style="margin:6px 0 12px">Connecting a repository needs no approval: it publishes
     nothing, and the first publish under a name still comes here for moderation. This page is for the other
     case — a name taken and never used, which only its holder could give back until now.</p>
+  <div class="acct__toolbar">
+    ${REPO_SCOPES.map(([id, label]) => `
+      <button class="fchip ${s === id ? 'is-active' : ''} ${!repoCount(id) && s !== id ? 'is-dim' : ''}" data-arepo="${id}">
+        ${label}<span class="fchip__cnt">${repoCount(id)}</span>
+      </button>`).join('')}
+    <span class="acct__hspacer"></span>
+    <div class="search" style="width:240px">
+      <svg><use href="#i-search"/></svg>
+      <input class="field" id="repoSearch" type="text" placeholder="Search by extension, repository or person"
+        value="${esc(state.repoQuery || '')}" />
+    </div>
+  </div>
   <div class="acard acard--flush">
     <table class="atable atable--wide">
       <thead><tr>
         <th>Extension name</th><th>GitHub repository</th><th>Last build</th><th>Claimed by</th>
         <th>Connected</th><th>How</th><th>State</th><th></th>
       </tr></thead>
-      <tbody>${list.map(r => {
-        const st = REPO_STATE[r.state];
-        return `<tr>
-          <td><button class="publink" data-aact="open-ext">${esc(r.ext)}</button></td>
-          <td><button class="publink" data-aact="open-repo">${esc(r.repo)}</button></td>
-          <td class="nowrap">${r.build}</td>
-          <td>
-            <button class="publink" data-aact="open-person">${esc(r.by)}</button>
-            ${r.co ? `<span class="atable__sub">${esc(r.co)}</span>` : ''}
-          </td>
-          <td class="nowrap">${r.conn}</td>
-          <td><span class="howtag">${r.how}</span></td>
-          <td>
-            <span class="statetag ${st.tone}">${st.label}</span>
-            <span class="atable__sub">${r.when}</span>
-          </td>
-          <td class="atable__act">
-            <button class="acticon" data-aact="unlist" title="Unlist"><svg><use href="#i-eye-off"/></svg></button>
-          </td>
-        </tr>`;
-      }).join('')}</tbody>
+      <tbody id="repoRows">${repoRows(filteredRepos())}</tbody>
     </table>
   </div>`;
 }
 
 /* ---------------------------- admin: events ----------------------------- */
 
+/* only verdicts get a hue; routine activity stays neutral */
 const EV_KINDS = {
-  'role change':        'is-violet',
-  'extension published':'is-blue',
-  'user joined':        'is-blue',
+  'role change':        'is-plain',
+  'extension published':'is-info',
+  'user joined':        'is-plain',
   'extension approved': 'is-ok',
-  'trusted publisher set':'is-ok',
+  'trusted publisher set':'is-plain',
   'github linked':      'is-plain',
   'profiles synced':    'is-plain',
   'extension rejected': 'is-bad',
@@ -1084,7 +1241,7 @@ const EVENTS = [
   { when:'Today, 10:50', kind:'user joined', who:'dinars@encycam.io', what:'dinars@encycam.io', det:'First sign-in to the store' },
   { when:'Today, 10:20', kind:'profiles synced', who:'t.ga.liullin@gmail.com', what:'—',
     det:'26 updated, 0 already known, 0 unchanged, 4 unknown to licsys (of 30)' },
-  { when:'Today, 10:19', kind:'role change', who:'t.ga.liullin@gmail.com', what:'sven@encycam.com', det:'+ admin', good:true },
+  { when:'Today, 10:19', kind:'role change', who:'t.ga.liullin@gmail.com', what:'sven@encycam.com', det:'+ admin' },
   { when:'03 Aug, 22:30', kind:'user joined', who:'sven@encycam.com', what:'sven@encycam.com', det:'First sign-in to the store' },
   { when:'03 Aug, 15:26', kind:'extension approved', who:'k.belousov@encycam.com', what:'encymascot', link:true, det:'Approved into the catalog' },
   { when:'03 Aug, 15:23', kind:'extension published', who:'k.belousov@encycam.com', what:'encymascot', link:true, det:'v0.1.0' },
@@ -1093,18 +1250,38 @@ const EVENTS = [
   { when:'03 Aug, 15:21', kind:'trusted publisher set', who:'k.belousov@encycam.com', what:'EncyMascot', link:true,
     det:'Connected kbelousov-ency/EncyMascot (name reserved, nothing published yet)' },
   { when:'03 Aug, 14:55', kind:'extension published', who:'liullinil@encycam.com', what:'ency3check', link:true, det:'v0.1.4' },
-  { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'cyrulinas@sprutcam.com', det:'+ admin', good:true },
-  { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'rmhusainov@sprut.com', det:'+ admin', good:true },
-  { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'marat@encycam.io', det:'+ admin', good:true },
-  { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'dinarz@sprut.ru', det:'+ admin', good:true },
+  { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'cyrulinas@sprutcam.com', det:'+ admin' },
+  { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'rmhusainov@sprut.com', det:'+ admin' },
+  { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'marat@encycam.io', det:'+ admin' },
+  { when:'31 Jul, 16:32', kind:'role change', who:'galilenar@gmail.com', what:'dinarz@sprut.ru', det:'+ admin' },
+  { when:'24 Jul, 11:08', kind:'extension rejected', who:'t.ga.liullin@gmail.com', what:'ency3check', link:true,
+    det:'v0.1.3 — crashed on load' },
 ];
 
-/* the chip row counts by kind — total first, then busiest kinds */
+/* the chip row counts by kind — total first, then busiest kinds. Kinds that
+   share a noun (extension …, github …) fold into a bracketed group: the noun
+   is written once on the group's edge, the chips keep only their verb */
+const EV_CHIP_GROUPS = [['extension', 'extension '], ['github', 'github ']];
+
 function eventChips() {
   const map = new Map();
   for (const e of EVENTS) map.set(e.kind, (map.get(e.kind) || 0) + 1);
   const rows = [...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  return [['all', EVENTS.length], ...rows.map(([k, n]) => [k, n])];
+  /* a bracket only pays for itself from two chips up — a lone kind stays a
+     plain chip with its full name */
+  const groups = EV_CHIP_GROUPS.map(([label, prefix]) => ({
+    label, prefix,
+    /* [kind, count, short label] */
+    chips: rows.filter(([k]) => k.startsWith(prefix)).map(([k, n]) => [k, n, k.slice(prefix.length)]),
+  })).filter(g => g.chips.length >= 2);
+  const loose = rows.filter(([k]) => !groups.some(g => k.startsWith(g.prefix)))
+    .map(([k, n]) => [k, n, k]);
+  return { groups, loose };
+}
+
+function eventChip([k, n, label]) {
+  return `<button class="evchip ${EV_KINDS[k] || 'is-plain'} ${k === state.eventKind ? 'is-on' : ''}"
+    data-aevent="${esc(k)}">${esc(label)}<b>${n}</b></button>`;
 }
 
 function acctEvents() {
@@ -1120,9 +1297,15 @@ function acctEvents() {
       <input class="field" id="eventSearch" type="text" placeholder="Search events" value="${esc(state.eventQuery)}" />
     </div>
   </div>
-  <div class="chiprow">${eventChips().map(([k, n]) => `
-    <button class="evchip ${EV_KINDS[k] || 'is-plain'} ${k === state.eventKind ? 'is-on' : ''}" data-aevent="${esc(k)}">
-      <b>${n}</b>${k}</button>`).join('')}</div>
+  <div class="chiprow">
+    ${eventChip(['all', EVENTS.length, 'all'])}
+    ${eventChips().groups.map(g => `
+      <span class="chipgroup">
+        <span class="chipgroup__label">${esc(g.label)}</span>
+        ${g.chips.map(eventChip).join('')}
+      </span>`).join('')}
+    ${eventChips().loose.map(eventChip).join('')}
+  </div>
   <div class="acard acard--flush" style="margin-top:8px">
     <table class="atable atable--wide">
       <thead><tr><th>When</th><th>Event</th><th>Who</th><th>What</th><th>Details</th></tr></thead>
@@ -1431,6 +1614,26 @@ $('#storeBody').addEventListener('click', ev => {
   if (arepo) { state.repoFilter = arepo.dataset.arepo; renderAccount(); return; }
   const aevent = ev.target.closest('[data-aevent]');
   if (aevent) { state.eventKind = aevent.dataset.aevent; renderAccount(); return; }
+  /* moderation: pick from the queue, or decide the selected one */
+  const amod = ev.target.closest('[data-amod]');
+  if (amod) { state.modSel = amod.dataset.amod; renderAccount(); return; }
+  const amoddec = ev.target.closest('[data-amoddec]');
+  if (amoddec) {
+    const r = modSelected();
+    const i = REQUESTS.indexOf(r);
+    if (i >= 0) {
+      REQUESTS.splice(i, 1);
+      DECIDED.push({ ...r, decision: amoddec.dataset.amoddec });
+      state.modSel = null;
+      toast(amoddec.dataset.amoddec === 'approve'
+        ? `${r.name} approved — listed in the catalog`
+        : `${r.name} rejected — returned to ${r.pub}`);
+      renderAccount();
+    }
+    return;
+  }
+  const ppl = ev.target.closest('[data-ppl]');
+  if (ppl) { state.peopleScope = ppl.dataset.ppl; renderAccount(); return; }
   const aact = ev.target.closest('[data-aact]');
   if (aact) {
     const a = aact.dataset.aact;
@@ -1439,6 +1642,23 @@ $('#storeBody').addEventListener('click', ev => {
     if (a === 'stats')      { state.acct = 'stats'; renderAccount(); return; }
     if (a === 'to-profile') { state.acct = 'profile'; renderAccount(); return; }
     if (a === 'as-table')   { state.chartTable = !state.chartTable; renderAccount(); return; }
+    if (a === 'block') {
+      const p = PEOPLE.find(x => x.email === aact.dataset.mail);
+      if (p) {
+        p.blocked = !p.blocked;
+        toast(p.blocked ? `${p.email} blocked` : `${p.email} unblocked`);
+        renderAccount();
+      }
+      return;
+    }
+    if (a === 'sync') {
+      aact.classList.add('is-busy');
+      setTimeout(() => {
+        aact.classList.remove('is-busy');
+        toast('Profiles are up to date');
+      }, 900);
+      return;
+    }
     toast({ github:'GitHub sign-in — not in this prototype',
       steps:'Publishing guide — not in this prototype',
       roles:'Roles reference — not in this prototype',
@@ -1449,9 +1669,7 @@ $('#storeBody').addEventListener('click', ev => {
       approve:'Approve — not in this prototype',
       download:'Download package — not in this prototype',
       reject:'Reject — not in this prototype',
-      sync:'Profile sync — not in this prototype',
       history:'Person history — not in this prototype',
-      block:'Block person — not in this prototype',
       'open-pubs':'Published by this person — not in this prototype',
       'open-person':'Person card — not in this prototype',
       'open-ext':'Extension page — not in this prototype',
@@ -1508,9 +1726,12 @@ $('#storeBody').addEventListener('pointerleave', () => {
 
 $('#storeBody').addEventListener('input', ev => {
   if (ev.target.id === 'peopleSearch') {
-    const q = ev.target.value.trim().toLowerCase();
-    $('#peopleRows').innerHTML = peopleRows(!q ? PEOPLE
-      : PEOPLE.filter(p => (p.email + p.name + p.co).toLowerCase().includes(q)));
+    state.peopleQuery = ev.target.value;
+    $('#peopleRows').innerHTML = peopleRows(filteredPeople());
+  }
+  if (ev.target.id === 'repoSearch') {
+    state.repoQuery = ev.target.value;
+    $('#repoRows').innerHTML = repoRows(filteredRepos());
   }
   if (ev.target.id === 'eventSearch') {
     state.eventQuery = ev.target.value;

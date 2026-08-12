@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" preserveAspectRatio="xMidYMax slice">
+  <!-- dusk sky -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b3550"/>
+      <stop offset=".65" stop-color="#4a4463"/>
+      <stop offset="1" stop-color="#8a5a58"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#141b2e"/>
+      <stop offset="1" stop-color="#232741"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="200" fill="url(#sky)"/>
+  <circle cx="318" cy="52" r="16" fill="#f0d9a8" opacity=".85"/>
+
+  <!-- far skyline -->
+  <g fill="#2a3049">
+    <rect x="0" y="96" width="34" height="104"/>
+    <rect x="30" y="72" width="26" height="128"/>
+    <rect x="66" y="106" width="30" height="94"/>
+    <rect x="120" y="64" width="22" height="136"/>
+    <rect x="168" y="92" width="34" height="108"/>
+    <rect x="222" y="78" width="24" height="122"/>
+    <rect x="270" y="98" width="36" height="102"/>
+    <rect x="330" y="70" width="28" height="130"/>
+    <rect x="372" y="102" width="28" height="98"/>
+    <polygon points="131,64 131,44 133,44 133,64"/>
+  </g>
+
+  <!-- near skyline -->
+  <g fill="url(#glass)">
+    <rect x="8" y="120" width="44" height="80"/>
+    <rect x="58" y="88" width="36" height="112"/>
+    <rect x="100" y="128" width="40" height="72"/>
+    <rect x="146" y="100" width="30" height="100"/>
+    <rect x="182" y="118" width="46" height="82"/>
+    <rect x="236" y="86" width="34" height="114"/>
+    <rect x="278" y="124" width="42" height="76"/>
+    <rect x="326" y="96" width="34" height="104"/>
+    <rect x="366" y="130" width="34" height="70"/>
+  </g>
+
+  <!-- lit windows -->
+  <g fill="#e8c87a" opacity=".8">
+    <rect x="64" y="96" width="4" height="5"/><rect x="74" y="96" width="4" height="5"/>
+    <rect x="84" y="108" width="4" height="5"/><rect x="64" y="120" width="4" height="5"/>
+    <rect x="74" y="132" width="4" height="5"/><rect x="84" y="144" width="4" height="5"/>
+    <rect x="152" y="108" width="4" height="5"/><rect x="162" y="120" width="4" height="5"/>
+    <rect x="152" y="140" width="4" height="5"/><rect x="162" y="156" width="4" height="5"/>
+    <rect x="242" y="94" width="4" height="5"/><rect x="252" y="94" width="4" height="5"/>
+    <rect x="262" y="106" width="4" height="5"/><rect x="242" y="122" width="4" height="5"/>
+    <rect x="252" y="138" width="4" height="5"/><rect x="262" y="154" width="4" height="5"/>
+    <rect x="332" y="104" width="4" height="5"/><rect x="342" y="104" width="4" height="5"/>
+    <rect x="352" y="118" width="4" height="5"/><rect x="332" y="134" width="4" height="5"/>
+    <rect x="14" y="128" width="4" height="5"/><rect x="24" y="140" width="4" height="5"/>
+    <rect x="34" y="128" width="4" height="5"/><rect x="44" y="152" width="4" height="5"/>
+    <rect x="188" y="126" width="4" height="5"/><rect x="198" y="138" width="4" height="5"/>
+    <rect x="208" y="126" width="4" height="5"/><rect x="218" y="150" width="4" height="5"/>
+    <rect x="106" y="136" width="4" height="5"/><rect x="116" y="148" width="4" height="5"/>
+    <rect x="126" y="136" width="4" height="5"/><rect x="284" y="132" width="4" height="5"/>
+    <rect x="294" y="144" width="4" height="5"/><rect x="304" y="132" width="4" height="5"/>
+    <rect x="372" y="138" width="4" height="5"/><rect x="382" y="150" width="4" height="5"/>
+  </g>
+</svg>

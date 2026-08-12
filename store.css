@@ -180,6 +180,16 @@
 .xcard--tint .xcard__hero .xtag { background:rgba(255,255,255,.18); color:var(--ink); }
 .xcard--tint .paidtag { background:rgba(255,255,255,.92); color:#1a1405; }
 
+/* cover variant: artwork under the tint. The category color stays, but as a
+   gradient that runs out of opacity toward the bottom-right, so the picture
+   comes through while the name/publisher corner keeps a solid plate to sit on */
+.xcard--cover .xcard__hero {
+  background:
+    linear-gradient(115deg, var(--kind) 30%, color-mix(in srgb, var(--kind) 45%, transparent) 60%,
+      transparent 100%),
+    var(--cover) center bottom / cover no-repeat;
+}
+
 .xcard__desc { flex:1; min-height:28px; padding:10px 12px 8px; font-size:11px;
   line-height:14px; color:var(--ec-fg-56);
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -368,10 +378,11 @@
 /* ============================================================ ACCOUNT ===== */
 /* Full-panel page with its own left nav. Only the three sections every user
    has; the admin ones (Statistics, Moderation, People, ...) are not built. */
-/* the nav is anchored to the panel's left edge on every section, so switching
-   between a narrow section and a wide admin one never shifts it sideways;
-   sections that want less width constrain their own column instead */
-.acct { display:flex; gap:12px; padding:12px; }
+/* the settings block is centered in the panel with generous side margins.
+   ONE cap for every section — a per-section cap would re-center the whole
+   block and make the nav jump sideways when switching sections. Narrow
+   sections constrain their own content column (.acct__main) instead. */
+.acct { display:flex; gap:12px; padding:12px 48px; max-width:1440px; margin:0 auto; }
 .acct__nav { width:196px; flex-shrink:0; display:flex; flex-direction:column; gap:2px;
   padding:4px; border:1px solid transparent; border-radius:var(--ec-radius-md);
   background:var(--ec-fg-4); align-self:flex-start; }
@@ -381,10 +392,13 @@
 .anav:hover { background:var(--ec-fg-6); color:var(--ec-fg-100); }
 .anav.is-on { background:var(--ec-fg-8); color:var(--ec-fg-100); font-weight:500; }
 .anav svg { width:14px; height:14px; flex-shrink:0; color:var(--ec-fg-48); }
-.anav.is-on svg { color:var(--ec-blue-soft); }
+/* active nav stays in the neutral ramp, like every other pressed state —
+   blue is reserved for links and picked values */
+.anav.is-on svg { color:var(--ec-fg-100); }
 
 .acct__main { flex:1; min-width:0; max-width:860px; }
-/* admin sections carry tables and charts, so they take all the width there is */
+/* admin sections carry tables and charts, so only their content column
+   widens — the outer block (and the nav with it) stays put */
 .acct--wide .acct__main { max-width:none; }
 /* section headings match the panel title scale, not a landing-page h1 */
 .acct__h1 { margin:0 0 10px; font-size:13px; line-height:18px; font-weight:500;
@@ -407,9 +421,12 @@
 /* role + state pills: tinted, one hue per meaning */
 .roletag, .statetag { display:inline-flex; align-items:center; height:18px; padding:0 8px;
   flex-shrink:0; border-radius:999px; font-size:10px; font-weight:500; }
-.roletag.is-admin { background:rgba(255,112,114,.14); color:#ff9a9b; }
-.roletag.is-customer { background:var(--ec-blue-tint); color:var(--ec-blue-soft); }
-.roletag.is-publisher { background:rgba(149,132,235,.16); color:var(--op-violet); }
+/* only the role that changes what a person can do gets a hue (violet =
+   permissions); customer/publisher are facts, not flags, and stay neutral —
+   coral would misread as danger, and blue is reserved for links */
+.roletag.is-admin { background:rgba(149,132,235,.16); color:var(--op-violet); }
+.roletag.is-customer, .roletag.is-publisher { background:var(--ec-fg-8); color:var(--ec-fg-64); }
+.roletag.is-blocked { background:rgba(255,112,114,.14); color:var(--op-coral); }
 .statetag.is-ok { background:var(--ec-green-16); color:var(--ec-badge); }
 .statetag.is-wait { background:rgba(235,193,74,.14); color:var(--ec-amber); }
 .statetag.is-bad { background:rgba(255,112,114,.14); color:#ff9a9b; }
@@ -419,18 +436,46 @@
   border-bottom:1px dotted var(--ec-fg-24); border-radius:0; padding:0; }
 .acct__hint:hover { color:var(--ec-fg-80); }
 
-.acct__signin { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
 .acct__aside { font-size:11px; color:var(--ec-fg-56); }
-/* caution, not an error: amber icon, body text stays readable */
-.acct__warn { display:flex; align-items:flex-start; gap:6px; margin-top:10px;
+/* the two ways in, each on its own plate: name + one line of consequence on
+   the left, the control on the right. The primary way (account) leads; the
+   per-repository fallback follows, opening with "Or". */
+.ghopt { display:flex; align-items:center; gap:16px; margin-top:10px; padding:10px 12px;
+  border-radius:var(--ec-radius); background:var(--ec-fg-4); }
+.ghopt__text { flex:1; min-width:0; }
+.ghopt__title { font-size:12px; line-height:16px; font-weight:500; color:var(--ec-fg-96); }
+.ghopt__sum { margin-top:1px; font-size:11px; line-height:16px; color:var(--ec-fg-56); }
+.ghopt .btn-primary { flex-shrink:0; }
+/* stacked variant: text above its control */
+.ghopt--split { flex-direction:column; align-items:stretch; gap:8px; }
+.ghopt__cta { align-self:flex-start; }
+/* what-and-why on the left, the two ways in stacked on the right */
+.ghcols { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:20px;
+  align-items:start; }
+.ghways { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.ghways .ghopt { margin-top:0; }
+.ghintro { min-width:0; }
+@media (max-width:900px) { .ghcols { grid-template-columns:1fr; } }
+/* caution, not an error: amber icon on its own line, so the text keeps the
+   same left edge as the lead above it */
+.acct__warn { display:block; margin-top:10px;
   font-size:11px; line-height:16px; color:var(--ec-fg-56); }
-.acct__warn svg { width:13px; height:13px; flex-shrink:0; margin-top:1px; color:var(--ec-amber); }
-.acct__connect { display:flex; gap:8px; margin-top:10px; }
-.acct__connect .field { height:24px; max-width:320px; }
+.acct__warn svg { display:block; width:13px; height:13px; margin-bottom:4px;
+  color:var(--ec-amber); }
+.acct__connect { display:flex; gap:8px; }
+.acct__connect .field { height:24px; flex:1; min-width:0; }
 .acct__connect .btn-secondary { flex-shrink:0; }
 .acct__connect .btn-secondary:disabled { color:var(--ec-fg-32); cursor:default;
   background:var(--ec-fg-6); border-color:transparent; }
 .acct__foot { display:flex; justify-content:flex-end; }
+
+/* profile: the identity card first (facts in two columns, logout in its own
+   footer row), the GitHub card below it — both full width, stacked. */
+.acct__factgrid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:12px 24px; }
+.acct__proffoot { display:flex; margin-top:12px; padding-top:12px;
+  border-top:1px solid var(--divider); }
+@media (max-width:640px) { .acct__factgrid { grid-template-columns:1fr; } }
 
 /* section tables (published extensions) */
 .atable { width:100%; border-collapse:collapse; }
@@ -441,34 +486,65 @@
 .atable tr:last-child td { border-bottom:none; }
 .atable tbody tr:hover { background:var(--ec-fg-4); }
 .atable__name { display:block; font-weight:500; color:var(--ec-fg-100); cursor:pointer; }
-.atable__name:hover { color:var(--ec-blue-soft); }
+/* row hover already signals clickability; the name underlines like a link
+   instead of jumping to a color the rest of the UI reserves for links proper */
+.atable__name:hover { text-decoration:underline; }
 .atable__sub { display:block; margin-top:1px; font-size:11px; color:var(--ec-fg-48); }
-.atable__act { width:40px; text-align:right; }
+/* name cell with the extension's identity plate, as on the store cards */
+.atable__id { display:flex; align-items:center; gap:10px; min-width:0; }
+.atable__logo { width:32px; height:32px; flex-shrink:0; }
+.atable__logo svg { width:18px; height:18px; }
+.atable__idtext { min-width:0; }
+/* actions sit in ONE row (56px fits two 24px buttons + the gap) and reveal
+   on row hover; a toggled-on state (blocked) stays visible */
+.atable__act { width:56px; text-align:right; white-space:nowrap; }
 .acticon { display:inline-grid; place-items:center; width:24px; height:24px;
   border-radius:var(--ec-radius); color:var(--ec-fg-48); transition:background .12s,color .12s; }
 .acticon:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
 .acticon svg { width:14px; height:14px; }
+.atable__act .acticon { opacity:0; transition:opacity .12s,background .12s,color .12s; }
+.atable tbody tr:hover .atable__act .acticon { opacity:1; }
+.atable__act .acticon.is-on { opacity:1; color:var(--op-coral); }
+.atable__act .acticon.is-on:hover { background:rgba(255,112,114,.1); color:var(--op-coral); }
+
+/* blocked rows read muted */
+.atable tr.is-blocked td, .atable tr.is-blocked .atable__name { color:var(--ec-fg-48); }
+.atable tr.is-blocked .person { opacity:.7; }
+
+/* filter chip counts (quiet numbers, like the sidebar counters) */
+.fchip__cnt { font-size:11px; color:var(--ec-fg-48); font-variant-numeric:tabular-nums; }
+.fchip.is-active .fchip__cnt { color:var(--ec-fg-64); }
+.fchip.is-dim { color:var(--ec-fg-32); }
+
+/* spinning sync icon while "syncing" */
+@keyframes ec-spin { to { transform:rotate(360deg); } }
+.btn-quiet.is-busy svg { animation:ec-spin .8s linear infinite; }
 
 /* ---- admin sections ---- */
 .acct__navsep { height:1px; background:var(--divider); margin:8px 6px 2px; }
 .acct__navlabel { padding:4px 10px 2px; font-size:10px; letter-spacing:.06em;
   text-transform:uppercase; color:var(--ec-fg-32); }
 .acct__h1 { display:flex; align-items:center; gap:8px; }
-.acct__h1icon { width:20px; height:20px; flex-shrink:0; color:var(--ec-blue-soft); }
+.acct__h1icon { width:20px; height:20px; flex-shrink:0; color:var(--ec-fg-72); }
 .acct__h1n { font-size:16px; font-weight:400; color:var(--ec-fg-48); }
 .acct__hspacer { flex:1; }
 .acct__toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
 .acct__meta { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
 .acct__caption { font-size:11px; line-height:16px; color:var(--ec-fg-48); }
 .acard__bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-.acct__grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+/* a fixed three-column rhythm keeps every breakdown card the same width —
+   a section with one card (visitors · by country) must not stretch its bars
+   across the whole page */
+.acct__grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr));
   gap:8px; margin-top:8px; align-items:start; }
 .acct__grid .acard { margin-bottom:0; }
+@media (max-width:1100px) { .acct__grid { grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); } }
 
 /* dashboard: a measure heading with its hue as a dot, so the breakdowns below
-   are visibly grouped by which number they slice */
-.acct__seclabel { display:flex; align-items:center; gap:6px; margin:14px 0 0;
-  font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ec-fg-56); }
+   are visibly grouped by which number they slice (sentence case — the system
+   uses no all-caps anywhere) */
+.acct__seclabel { display:flex; align-items:center; gap:6px; margin:16px 2px 0;
+  font-size:11px; font-weight:500; color:var(--ec-fg-64); }
 .dot { width:8px; height:8px; flex-shrink:0; border-radius:999px; }
 .dot--v { background:var(--m-visitors); }
 .dot--d { background:var(--m-downloads); }
@@ -509,8 +585,9 @@
 :root { --m-visitors:#2b8fe0; --m-downloads:#e06a2a; }
 
 /* the wrapper is the positioning context for the tooltip; height grows with
-   the plot so the x-axis band is never cropped */
-.chartwrap { position:relative; }
+   the plot so the x-axis band is never cropped. Width is capped: an SVG that
+   scales with a full-width card turns two columns into a stadium screen */
+.chartwrap { position:relative; max-width:860px; }
 .chart { width:100%; height:auto; display:block; overflow:visible; }
 .chart__grid { stroke:var(--ec-fg-8); stroke-width:1; }
 .chart__tick { font-size:9px; fill:var(--ec-fg-32); font-variant-numeric:tabular-nums; }
@@ -560,12 +637,63 @@
 .bar__fill.is-downloads { background:var(--m-downloads); }
 .bar__n { font-size:12px; color:var(--ec-fg-64); text-align:right;
   font-variant-numeric:tabular-nums; }
-/* moderation: one card per waiting request. Built on the store-card anatomy —
-   tinted hero band, body of facts, footer that owns the decision buttons —
-   because the moderator is judging the same object the shop will show. */
-.reqgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 420px)); gap:8px; }
-.reqcard { display:flex; flex-direction:column; overflow:hidden;
+/* moderation: queue on the left (pick), review pane on the right (judge).
+   The pane keeps the store-card anatomy — tinted hero, body, footer that owns
+   the decision — because the moderator is judging what the shop will show. */
+.mod { display:grid; grid-template-columns:280px minmax(0,1fr); gap:8px; align-items:start; }
+.modq { display:flex; flex-direction:column; gap:2px; padding:4px;
   border:1px solid transparent; border-radius:var(--ec-radius-md); background:var(--ec-fg-4); }
+.modq__row { display:flex; align-items:center; gap:8px; padding:6px 8px; text-align:left;
+  border-radius:var(--ec-radius); transition:background .12s; }
+.modq__row:hover { background:var(--ec-fg-6); }
+.modq__row.is-on { background:var(--ec-fg-8); }
+.modq__logo { width:28px; height:28px; }
+.modq__logo svg { width:16px; height:16px; }
+.modq__text { flex:1; min-width:0; }
+.modq__name { display:block; font-size:12px; font-weight:500; color:var(--ec-fg-96);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.modq__sub { display:block; margin-top:1px; font-size:11px; color:var(--ec-fg-48);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.modq__side { display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0; }
+.modq__when { font-size:10px; color:var(--ec-fg-48); white-space:nowrap; }
+.modq__flags { font-size:10px; color:var(--ec-amber); white-space:nowrap; }
+.modq__done { padding:6px 8px; font-size:11px; color:var(--ec-fg-32); }
+
+.modv { display:flex; flex-direction:column; overflow:hidden;
+  border:1px solid transparent; border-radius:var(--ec-radius-md); background:var(--ec-fg-4); }
+.modv__hero { display:flex; align-items:flex-start; gap:10px; padding:12px;
+  background:var(--kind, var(--ec-fg-8)); --ink:#fff; --ink-soft:rgba(255,255,255,.72); }
+.modv__body { padding:12px; }
+.modv__cols { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:20px; align-items:start; }
+.modv__main { min-width:0; }
+.modv__block + .modv__block { margin-top:12px; padding-top:12px; border-top:1px solid var(--divider); }
+/* flush left like every other block; the dash is the list mark, so a single
+   "nothing notable" does not read as a mis-indented paragraph */
+.modv__reach { margin:0; padding:0; list-style:none; }
+.modv__reach li { font-size:12px; line-height:18px; color:var(--ec-fg-80); }
+.modv__reach li + li { margin-top:2px; }
+.modv__reach li::before { content:'—'; margin-right:6px; color:var(--ec-fg-32); }
+.modv__none { font-size:12px; line-height:18px; color:var(--ec-fg-48); font-style:italic; }
+.modv__prev { display:flex; flex-direction:column; gap:4px; }
+.modv__prevrow { display:flex; align-items:baseline; gap:8px; font-size:12px; min-width:0; }
+.modv__prevrow b { font-weight:500; color:var(--ec-fg-96); font-variant-numeric:tabular-nums; }
+.modv__prevrow span { color:var(--ec-fg-72); min-width:0; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; }
+.modv__prevrow i { margin-left:auto; font-style:normal; color:var(--ec-fg-48); white-space:nowrap; }
+/* facts rail: the kv grid plus publisher standing and package tools */
+.modv__facts { display:flex; flex-direction:column; gap:12px; padding:10px 12px;
+  border-radius:var(--ec-radius); background:var(--ec-fg-4); }
+/* a long repo path stays one clipped line: a button centers and wraps its
+   text by default, which breaks the kv column rhythm */
+.modv__facts .reqcard__kv .publink { display:block; max-width:100%; text-align:left;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.modv__pub { padding-top:10px; border-top:1px solid var(--divider); }
+.modv__pubnote { margin-top:4px; font-size:11px; line-height:16px; color:var(--ec-fg-56); }
+.modv__tools { display:flex; flex-direction:column; gap:2px; padding-top:10px;
+  border-top:1px solid var(--divider); align-items:flex-start; }
+.modv__hint { font-size:11px; color:var(--ec-fg-48); text-align:right; }
+@media (max-width:1100px) { .mod { grid-template-columns:1fr; }
+  .modv__cols { grid-template-columns:1fr; } }
 
 .reqcard__hero { display:flex; align-items:flex-start; gap:10px; padding:12px; }
 .reqcard__logo { width:44px; height:44px; }
@@ -575,8 +703,10 @@
   overflow:hidden; text-overflow:ellipsis; }
 .reqcard__by { display:flex; align-items:center; gap:6px; margin-top:2px; min-width:0;
   font-size:11px; color:var(--ink-soft); }
-/* the hero is tinted, so the pill flips to a light plate to stay legible */
-.reqcard__state { flex-shrink:0; background:rgba(255,255,255,.92); color:#1a1405; }
+/* the hero is tinted in the category hue, which can be any of six colors —
+   the pill is a solid white plate with dark ink, so it reads on all of them
+   (overriding the amber the statetag tone would set) */
+.statetag.reqcard__state { flex-shrink:0; background:#fff; color:#16191b; font-weight:500; }
 
 /* body: the facts a decision rests on, each block labelled */
 .reqcard__body { padding:12px; }
@@ -593,15 +723,18 @@
 /* flags are advisory, not blocking — amber outline, not a filled warning */
 .flagtag { display:inline-flex; align-items:center; height:18px; padding:0 8px;
   border-radius:999px; border:1px solid rgba(235,193,74,.4); font-size:10px; color:var(--ec-amber); }
-/* footer is its own plate so the decision has a place of its own */
+/* footer is its own plate so the decision has a place of its own.
+   Approve is the solid plate (same recipe as the picked scope segment);
+   Reject stays quiet until hovered — refusal should take one extra beat. */
 .reqcard__acts { display:flex; align-items:center; gap:6px; margin-top:auto;
   padding:8px 12px; background:var(--ec-fg-4); border-top:1px solid var(--divider);
   border-radius:0 0 7px 7px; }
 .reqcard__aspacer { flex:1; }
-.reqcard__acts .btn-secondary { color:var(--op-coral); }
-.reqcard__acts .btn-secondary svg { color:var(--op-coral); }
-.reqcard__acts .btn-secondary:hover { background:rgba(255,112,114,.12);
-  border-color:rgba(255,112,114,.4); }
+.btn-approve { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 12px;
+  border-radius:var(--ec-radius); background:var(--ec-fg-100); color:var(--ec-bg);
+  font-size:12px; font-weight:500; white-space:nowrap; transition:background .12s; }
+.btn-approve:hover { background:var(--ec-fg-80); }
+.btn-approve svg { width:14px; height:14px; }
 .btn-quiet.is-danger { color:var(--op-coral); }
 .btn-quiet.is-danger svg { color:var(--op-coral); }
 .btn-quiet.is-danger:hover { background:rgba(255,112,114,.08); }
@@ -617,18 +750,17 @@
 .person__text { min-width:0; }
 .rolerow { display:flex; flex-wrap:wrap; gap:3px; }
 .youtag { display:inline-flex; align-items:center; height:16px; margin-left:6px; padding:0 6px;
-  border-radius:999px; border:1px solid var(--ec-blue-soft); font-size:9px; color:var(--ec-blue-soft); }
+  border-radius:999px; border:1px solid var(--ec-fg-24); font-size:9px; color:var(--ec-fg-64); }
 .howtag { display:inline-flex; align-items:center; height:18px; padding:0 8px;
   border-radius:999px; background:var(--ec-fg-8); font-size:10px; color:var(--ec-fg-64); }
-.countpill { display:inline-flex; align-items:center; height:20px; padding:0 9px;
-  border-radius:999px; background:var(--ec-fg-8); font-size:11px; color:var(--ec-fg-72);
-  transition:background .12s,color .12s; }
-.countpill.is-quiet { color:var(--ec-fg-32); }
-button.countpill:hover { background:var(--ec-fg-12); color:var(--ec-fg-100); }
-button.countpill.is-on { background:var(--ec-blue-tint); color:var(--ec-blue-soft); }
-
 /* events: kind chips double as the filter, and share the row tag colors */
-.chiprow { display:flex; flex-wrap:wrap; gap:6px; }
+.chiprow { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+/* kinds sharing a noun sit in one bracket; the noun is written once as the
+   group label, so chips keep only their verb (published / approved / …).
+   Chip 24 + 2px inset = container radius 8 */
+.chipgroup { display:inline-flex; align-items:center; gap:4px; padding:2px 2px 2px 9px;
+  border:1px solid var(--ec-fg-8); border-radius:var(--ec-radius-md); }
+.chipgroup__label { font-size:11px; color:var(--ec-fg-48); margin-right:1px; }
 .evchip { display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 8px;
   border-radius:var(--ec-radius); background:var(--ec-fg-4); border:1px solid transparent;
   font-size:11px; color:var(--ec-fg-64); transition:border-color .12s,color .12s; }
@@ -638,11 +770,15 @@ button.countpill.is-on { background:var(--ec-blue-tint); color:var(--ec-blue-sof
 .evtag { display:inline-flex; align-items:center; height:18px; padding:0 8px; flex-shrink:0;
   border-radius:999px; background:var(--ec-fg-8); font-size:10px; font-weight:500;
   white-space:nowrap; text-transform:capitalize; }
-/* one hue per meaning: green = accepted, violet = permissions, coral = refused */
+/* color only where it carries a verdict, like the state pills: green =
+   accepted, coral = refused. Everything routine stays in the neutral ramp —
+   ten colored chips in a row code nothing. */
 .evchip.is-ok, .evtag.is-ok { background:var(--ec-green-16); color:var(--ec-badge); }
-.evchip.is-blue, .evtag.is-blue { background:var(--ec-blue-tint); color:var(--ec-blue-soft); }
-.evchip.is-violet, .evtag.is-violet { background:rgba(149,132,235,.16); color:var(--op-violet); }
 .evchip.is-bad, .evtag.is-bad { background:rgba(255,112,114,.14); color:#ff9a9b; }
+/* publish is a milestone, not a verdict: blue, distinct from approved/rejected */
+.evchip.is-info, .evtag.is-info { background:var(--ec-blue-tint); color:var(--ec-blue-soft); }
+:root[data-theme="light"] .evchip.is-info,
+:root[data-theme="light"] .evtag.is-info { color:var(--ec-blue); }
 .evchip.is-plain, .evtag.is-plain { background:var(--ec-fg-8); color:var(--ec-fg-64); }
 
 @media (max-width:760px) {
@@ -686,8 +822,14 @@ button.countpill.is-on { background:var(--ec-blue-tint); color:var(--ec-blue-sof
   font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace; font-size:11px;
   color:var(--ec-fg-96); }
 
-.publink { color:var(--ec-blue-soft); text-decoration:none; }
+/* it is a <button>, which does not inherit font — pick the surrounding text's
+   size up explicitly, or the link renders at the UA default 13.3px */
+.publink { font:inherit; padding:0; color:var(--ec-blue-soft); text-decoration:none; }
 .publink:hover { text-decoration:underline; }
+/* inside tables the link ink goes neutral: four blue cells per row would out-
+   shout the data. Hover underline still says "clickable", as on .atable__name */
+.atable .publink { color:var(--ec-fg-96); }
+.atable .publink:hover { color:var(--ec-fg-100); }
 
 /* progressive disclosure for the terminal variant */
 .pubmore { margin-top:4px; }
