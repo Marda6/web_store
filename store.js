@@ -186,6 +186,7 @@ const state = {
   /* paid extensions this account holds a licence for: id → the day it was bought */
   owned:new Map([['planar-slicing', '2026-08-12'], ['directcladding', '2026-09-02']]),
   plan:null, priceFor:null, priceDraft:null, pkgSel:null, pkgScope:'all',
+  way:'github', /* which publish route is picked on the publish page */
 };
 
 /* ------------------------------ helpers --------------------------------- */
@@ -322,8 +323,11 @@ function renderCatRows() {
     </button>`).join('');
 }
 
-/* three mutually exclusive values, so a segmented track rather than a list */
-function renderPrice() {
+/* three mutually exclusive values, so a segmented track rather than a list.
+   NB: named renderPriceFilter because Igor's paid build also has a
+   renderPrice — the price-editing window — and the later declaration used
+   to shadow this one, leaving the sidebar filter empty */
+function renderPriceFilter() {
   const rows = [
     { id:'all', label:'All' },
     { id:'free', label:'Free' },
@@ -379,10 +383,14 @@ function likeBtn(e) {
     <svg><use href="#${on ? 'i-like-fill' : 'i-like'}"/></svg>${fmtK(e.likes)}</span>`;
 }
 
-/* paid extensions lead to the details page (View); free ones install in place */
+/* paid extensions lead to the details page, and the button wears the price —
+   the cost sits right where you act; free ones install in place */
 function actionBtn(e) {
   if (e.paid && !state.installed.has(e.id))
-    return `<span class="xinstall" role="button">View</span>`;
+    /* the lowest plan alone fits the narrow card foot; "from …" moves to the
+       tooltip, and the details page lists every plan */
+    return `<span class="xinstall xinstall--price" role="button" title="${esc(cardPrice(e))}">${
+      esc(e.prices ? priceTag([...e.prices].sort((a, b) => a.cents - b.cents)[0]) : 'Paid')}</span>`;
   const on = state.installed.has(e.id);
   return `<span class="xinstall ${on ? 'is-on' : ''}" role="button" data-install="${e.id}">
     ${on ? '<svg><use href="#i-check"/></svg>Installed' : 'Install'}</span>`;
@@ -407,7 +415,6 @@ function card(e) {
           <span class="xcard__name">${esc(e.name)}</span>
           <span class="xcard__by">${esc(e.ver)}<i class="xcard__bysep"></i>by ${esc(e.pub)}</span>
         </span>
-        ${paidTag(e)}
       </span>
       <span class="xcard__tags">${tagChips(e, 3)}</span>
     </span>
@@ -431,7 +438,6 @@ function row(e) {
     <span class="xrow__text">
       <span class="xrow__line1">
         <span class="xrow__name">${esc(e.name)}</span>
-        ${paidTag(e)}
       </span>
       <span class="xrow__desc">${esc(e.ver)} · by ${esc(e.pub)} — ${esc(e.desc)}</span>
     </span>
@@ -2404,7 +2410,7 @@ function upMissing() {
     return 'Your developer profile is Free, and a paid extension needs the Paid profile (Publishing Policy §2.3).';
   if (!u.sched) return 'Under Reserved functionality, answer whether your extension does any of the listed things.';
   if (u.sched === 'yes' && !u.areas.length) return 'Under Reserved functionality, tick the areas your extension works in.';
-  if (u.decl.some(x => !x)) return 'Tick all three statements under Reserved functionality.';
+  if (u.decl.some(x => !x)) return 'Tick all three statements under Declarations.';
   return '';
 }
 
@@ -2417,51 +2423,84 @@ function upReview() {
       <svg class="pubcard__icon"><use href="#i-box"/></svg>
       <h2 class="pubcard__title">${p.id} <span class="acct__aside">${p.ver} · by ${esc(DEV.publicName || ME.name)}</span></h2>
       <span class="acct__hspacer"></span>
-      <button class="btn-quiet" data-up="cancel"><svg><use href="#i-close"/></svg>Choose another</button>
+      <button class="btn-secondary" data-up="cancel"><svg><use href="#i-upload"/></svg>Choose another package</button>
     </div>
-    <div class="upcols">
-      <div>
-        ${checkRow('data-up="paid"', u.paid, 'Paid extension (requires a license)')}
-        <div class="dform dform--tight">
-          ${dfield('Category', `<select class="field" data-upf="cat">
-            <option value="">— not saying, a moderator will sort it —</option>
-            ${CATS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}" ${u.cat === c.id ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}
-          </select>`)}
-          ${dfield('Tags', '<span class="dfield__fixed">ency-extension, utility <i>· from the package</i></span>')}
+    <p class="upreview__hint">Wrong file? <button class="publink" data-up="cancel">Go back and pick another package</button> —
+      nothing is sent until you submit.</p>
+
+    <div class="upgrid">
+      <div class="upsec">
+        <div class="upsec__title">Store card</div>
+        <p class="upsec__sub">The card itself is read from inside the package — here you pick
+          the pricing, the category and the tags.</p>
+        <div class="upcol__label">Pricing</div>
+        <div class="dchoices uppick">
+          <button class="dchoice ${u.paid ? '' : 'is-on'}" data-up="paid:free"><span class="frow__radio"></span>
+            <span class="dchoice__text"><b>Free</b><span>Anyone installs it from the store.</span></span></button>
+          <button class="dchoice ${u.paid ? 'is-on' : ''}" data-up="paid:paid"><span class="frow__radio"></span>
+            <span class="dchoice__text"><b>Paid</b><span>Requires a license bought in the store.</span></span></button>
         </div>
-        <p class="acct__caption acct__caption--foot">No pictures inside — the card shows the entry-point symbol instead of an icon.
-          Put PNG or JPG files in the package's <code>screenshots/</code> folder to give it an icon and a cover.</p>
-        <p class="acct__caption acct__caption--foot">No README in the package.</p>
-      </div>
-      <div>
+        <div class="upcol__label">Category</div>
+        <select class="field upfield" data-upf="cat">
+          <option value="">Let a moderator sort it</option>
+          ${CATS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}" ${u.cat === c.id ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}
+        </select>
+        <div class="upcol__label">Tags</div>
+        <div class="uptags">
+          <span class="xtag">ency-extension</span><span class="xtag">utility</span>
+          ${u.tags.map((t, i) => `<span class="xtag uptag">${esc(t)}<button class="uptag__x" data-up="tagdel:${i}" aria-label="Remove ${esc(t)}">×</button></span>`).join('')}
+          <input class="uptags__in" placeholder="Add a tag…">
+        </div>
+        <p class="dfield__hint">ency-extension and utility come from the package.</p>
+        <div class="upcol__label">Card preview</div>
         <div class="upcard">
-          <span class="xlogo upcard__logo" style="--xc:#8a9299"><svg><use href="#a-puzzle"/></svg></span>
+          <button class="upcard__pick" data-up="icon" title="Upload the card icon">
+            ${u.icon
+              ? `<img class="upcard__img" src="${u.icon}" alt="">
+            <span class="upcard__pickhint"><svg><use href="#i-upload"/></svg></span>`
+              : `<span class="upcard__ph"><svg><use href="#i-upload"/></svg></span>`}
+            <span class="upcard__plus">+</span>
+          </button>
+          <input type="file" accept="image/png,image/jpeg" class="upcard__file" hidden>
           <div><b>${p.name}</b><span>${esc(DEV.publicName || ME.name)} · ${u.paid ? 'Paid' : 'Free'}</span></div>
         </div>
-        <p class="acct__caption">Approximate look — the live card renders after the catalog indexes the package.</p>
+        <p class="acct__caption">Approximate look — the live card renders once the catalog indexes
+          the package. ${u.icon
+            ? `The icon is set here; ship PNG or JPG files in the package's <code>screenshots/</code>
+          folder to add a cover too.`
+            : `There are no pictures inside: click the icon to upload one, or ship PNG or JPG files
+          in the package's <code>screenshots/</code> folder.`} There is no README in the package.</p>
+      </div>
+
+      <div class="upsec">
+        <div class="upsec__title">Reserved functionality</div>
+        <p class="upsec__sub">Some capabilities are licensed by ENCY separately. An extension may still offer them, but each
+          such function must check that the user holds the matching ENCY licence.
+          <button class="publink" data-dev="doc">Schedule A (v1.0)</button></p>
+        <p class="sched__q">Does your extension do any of the following?</p>
+        <div class="dchoices uppick">
+          <button class="dchoice ${u.sched === 'no' ? 'is-on' : ''}" data-up="sched:no"><span class="frow__radio"></span>
+            <span class="dchoice__text"><b>No</b><span>It does not provide any capability listed in Schedule A.</span></span></button>
+          <button class="dchoice ${u.sched === 'yes' ? 'is-on' : ''}" data-up="sched:yes"><span class="frow__radio"></span>
+            <span class="dchoice__text"><b>Yes</b><span>It provides capabilities in these areas:</span></span></button>
+        </div>
+        <div class="sched__areas ${u.sched === 'yes' ? '' : 'is-off'}">
+          <table class="atable sched__table">
+            <thead><tr><th></th><th>Area</th><th>Required ENCY licence</th></tr></thead>
+            <tbody>${RESERVED.map(([id, area, lic]) => `
+              <tr data-up="area:${id}"><td class="sched__ck">${checkRow('', u.areas.includes(id), '')}</td>
+                <td><span class="acct__aside">${id}</span> ${esc(area)}</td><td>${esc(lic)}</td></tr>`).join('')}</tbody>
+          </table>
+        </div>
+        <p class="acct__caption">Each function of your extension in an area must check the licence for that area. A licence
+          for one area does not unlock functions in another. (Publishing Policy §4.3)</p>
+        <p class="acct__caption">Not sure which areas apply? <button class="publink" data-dev="ask">Ask us before you submit.</button>
+          Pre-submission determination (Publishing Policy §4.6)</p>
       </div>
     </div>
 
-    <div class="sched">
-      <div class="dbefore__title">Reserved functionality</div>
-      <p class="acard__lead">Some capabilities are licensed by ENCY separately. An extension may still offer them, but each
-        such function must check that the user holds the matching ENCY licence.
-        <button class="publink" data-dev="doc">Schedule A (v1.0)</button></p>
-      <p class="sched__q">Does your extension do any of the following?</p>
-      <button class="dchoice dchoice--row ${u.sched === 'no' ? 'is-on' : ''}" data-up="sched:no"><span class="frow__radio"></span>
-        <span class="dchoice__text"><b>No — it does not provide any capability listed in Schedule A</b></span></button>
-      <button class="dchoice dchoice--row ${u.sched === 'yes' ? 'is-on' : ''}" data-up="sched:yes"><span class="frow__radio"></span>
-        <span class="dchoice__text"><b>Yes — it provides capabilities in these areas:</b></span></button>
-      <table class="atable sched__table ${u.sched === 'yes' ? '' : 'is-off'}">
-        <thead><tr><th></th><th>Area</th><th>Required ENCY licence</th></tr></thead>
-        <tbody>${RESERVED.map(([id, area, lic]) => `
-          <tr data-up="area:${id}"><td class="sched__ck">${checkRow('', u.areas.includes(id), '')}</td>
-            <td><span class="acct__aside">${id}</span> ${esc(area)}</td><td>${esc(lic)}</td></tr>`).join('')}</tbody>
-      </table>
-      <p class="acct__caption">Each function of your extension in an area must check the licence for that area. A licence
-        for one area does not unlock functions in another. (Publishing Policy §4.3)</p>
-      <p class="acct__caption">Not sure which areas apply? <button class="publink" data-dev="ask">Ask us before you submit.</button>
-        Pre-submission determination (Publishing Policy §4.6)</p>
+    <div class="upsec upsec--rule">
+      <div class="upsec__title">Declarations</div>
       <div class="sched__decl">${DECLARATIONS.map((t, i) => checkRow(`data-up="decl:${i}"`, u.decl[i], t)).join('')}</div>
     </div>
 
@@ -2490,13 +2529,35 @@ function upDone() {
 }
 
 /* Until the developer terms are accepted, a card on top says so once, and the
-   upload card only points back at it. */
+   upload route only points back at it. */
 function renderPublish() {
   if (state.up && state.up.step === 'done') { $('#storeBody').innerHTML = upDone(); return; }
+  /* the package is picked: the review form takes the page over — the chooser
+     comes back through "Choose another" */
+  if (state.up) {
+    $('#storeBody').innerHTML = `
+  <div class="pub">
+    <h1 class="pub__h1">Publish an extension</h1>
+    ${upReview()}
+  </div>`;
+    return;
+  }
   const gate = !isDeveloper();
+  const way = state.way;
+  const tile = (id, head, desc) => `
+      <button class="dchoice pubway ${way === id ? 'is-on' : ''}" data-way="${id}"
+        role="radio" aria-checked="${way === id}">
+        <span class="frow__radio"></span>
+        <span class="pubway__text">
+          <span class="pubway__head">${head}</span>
+          <span class="pubway__desc">${desc}</span>
+        </span>
+      </button>`;
   $('#storeBody').innerHTML = `
   <div class="pub">
     <h1 class="pub__h1">Publish an extension</h1>
+    <p class="pub__lead">There are two ways to get an extension into the store — pick the one
+      that fits where your code lives.</p>
     ${gate ? `
     <section class="pubcard pubgate">
       <div class="pubcard__head">
@@ -2510,55 +2571,56 @@ function renderPublish() {
       <details class="pubmore"><summary>Show the list</summary>${legalList()}</details>
       <div class="pubcard__foot"><button class="btn-primary" data-pact="become"><svg><use href="#i-dev"/></svg>Become a developer</button></div>
     </section>` : ''}
-    <div class="pub__cols">
-
-      <section class="pubcard">
-        <div class="pubcard__head">
-          <svg class="pubcard__icon"><use href="#i-github"/></svg>
-          <h2 class="pubcard__title">Publish from GitHub</h2>
-          <span class="pubtag">Recommended</span>
-        </div>
-        <ol class="publist">
-          <li>Start from the template repository — the workflow that builds and publishes is already in it.</li>
-          <li>Write your code in <code>src/</code>; the card text lives in <code>src/readme.md</code> and <code>src/package.info.json</code>.</li>
-          ${gate ? '<li><b>Become a developer</b> — once, above.</li>' : ''}
-          <li><a class="publink" href="#" data-pact="signin">Sign in with GitHub</a> once — after that every repository of yours publishes with nothing to connect and no token anywhere.</li>
-          <li>Publish: in your repository open <b>Actions</b> → <b>publish-to-ency-store</b> → <b>Run workflow</b> and press the green button, fields left empty — it works out the next version by itself.
-            <details class="pubmore"><summary>...or from the terminal</summary>
-              <pre class="pubcode">gh workflow run publish-to-ency-store</pre>
-            </details>
-          </li>
-        </ol>
-        <p class="pubnote">GitHub builds it, the store packs and publishes it — and says how it went under
-          <a class="publink" href="#" data-pact="published">My published</a>, failures included, so there is nothing
-          to chase on GitHub. Your first extension waits for a moderator; its card link works meanwhile,
-          and later versions appear at once.</p>
-        <div class="pubcard__foot">
-          <button class="btn-primary" data-pact="template"><svg><use href="#i-github"/></svg>Use the template</button>
-          <button class="btn-link" data-pact="ai">AI-based development</button>
-        </div>
-      </section>
-
-      <section class="pubcard">
-        <div class="pubcard__head">
-          <svg class="pubcard__icon"><use href="#i-clip"/></svg>
-          <h2 class="pubcard__title">Upload a .nupkg</h2>
-        </div>
-        <p class="pubintro">For code that does not live on GitHub, a one-off release, or a package your own
-          build already produces. Nothing to connect and no repository — but you repeat this by hand for
-          every new version.</p>
-        <ol class="publist">
-          <li>Build it in the ENCY format (e.g. <code>dotnet pack</code>) — it must contain a <code>*.settings.json</code> manifest and the extension <code>.dll</code>.</li>
-          <li>Upload it here and check the card preview that appears below.</li>
-          <li>Press Submit for review. The package goes to the feed exactly as built, so everything on the card is read from inside it and cannot be edited here.</li>
-        </ol>
-        ${gate
-          ? '<p class="pubnote">The upload opens here once you have become a developer (above).</p>'
-          : state.up ? '' : '<button class="pubdrop" data-up="choose">Choose package...</button>'}
-      </section>
-
+    <div class="pubrow">
+    <div class="pubways" role="radiogroup" aria-label="How to publish">
+      ${tile('github',
+        '<svg><use href="#i-github"/></svg><b>Publish from GitHub</b><span class="pubtag">Recommended</span>',
+        'Code lives — or could live — in a GitHub repository. Connect once; every new version then publishes itself.')}
+      ${tile('nupkg',
+        '<svg><use href="#i-clip"/></svg><b>Upload a .nupkg</b>',
+        'Code outside GitHub, a one-off release, or a package your own build already produces — you upload every version by hand.')}
     </div>
-    ${state.up ? upReview() : ''}
+    ${way === 'github' ? `
+    <section class="pubcard pubsteps">
+      <ol class="publist">
+        <li>Start from the template repository — the workflow that builds and publishes is already in it.</li>
+        <li>Write your code in <code>src/</code>; the card text lives in <code>src/readme.md</code> and <code>src/package.info.json</code>.</li>
+        ${gate ? '<li><b>Become a developer</b> — once, above.</li>' : ''}
+        <li><a class="publink" href="#" data-pact="signin">Sign in with GitHub</a> once — after that every repository of yours publishes with nothing to connect and no token anywhere.</li>
+        <li>Publish: in your repository open <b>Actions</b> → <b>publish-to-ency-store</b> → <b>Run workflow</b> and press the green button, fields left empty — it works out the next version by itself.
+          <details class="pubmore"><summary>...or from the terminal</summary>
+            <pre class="pubcode">gh workflow run publish-to-ency-store</pre>
+          </details>
+        </li>
+      </ol>
+      <p class="pubnote">GitHub builds it, the store packs and publishes it — and says how it went under
+        <a class="publink" href="#" data-pact="published">My published</a>, failures included, so there is nothing
+        to chase on GitHub. Your first extension waits for a moderator; its card link works meanwhile,
+        and later versions appear at once.</p>
+      <div class="pubcard__foot">
+        <button class="btn-primary" data-pact="template"><svg><use href="#i-github"/></svg>Use the template</button>
+        <button class="btn-link" data-pact="ai">AI-based development</button>
+      </div>
+    </section>` : `
+    <section class="pubcard pubsteps">
+      <ol class="publist">
+        <li>Build it in the ENCY format (e.g. <code>dotnet pack</code>) — it must contain a <code>*.settings.json</code> manifest and the extension <code>.dll</code>.</li>
+        <li>Drop the package below — or click the area to pick it. The card preview and the review form open here.</li>
+        <li>Press Submit for review. The package goes to the feed exactly as built, so everything on the card is read from inside it and cannot be edited here.</li>
+      </ol>
+      ${gate ? `
+      <div class="updrop is-off">
+        <svg><use href="#i-upload"/></svg>
+        <b>The upload opens later</b>
+        <span>become a developer above first</span>
+      </div>` : `
+      <button class="updrop" data-up="choose">
+        <svg><use href="#i-upload"/></svg>
+        <b>Drop your .nupkg here</b>
+        <span>or click to choose a file</span>
+      </button>`}
+    </section>`}
+    </div>
   </div>`;
 }
 
@@ -2605,7 +2667,7 @@ function render() {
   renderToolbar();
   renderList();
   renderCatRows();
-  renderPrice();
+  renderPriceFilter();
   renderTags();
   renderPubMenu();
   renderDetail();
@@ -2860,17 +2922,33 @@ function devClick(ev) {
   return true;
 }
 
+/* picking and dropping a file land in the same place; the prototype reads
+   whatever was given as the sample package */
+function upChoose() {
+  /* most extensions touch nothing from Schedule A, so No is the default;
+     picking Yes stays a deliberate act */
+  state.up = { step:'review', paid:false, cat:'', tags:[], icon:null, sched:'no', areas:[], decl:[false, false, false] };
+  toast(`${upPackage().id}.${upPackage().ver}.nupkg read`);
+}
+
 function upClick(ev) {
+  const w = ev.target.closest('[data-way]');
+  if (w) { state.way = w.dataset.way; renderPublish(); return true; }
   const b = ev.target.closest('[data-up]');
   if (!b) return false;
   const [a, arg] = b.dataset.up.split(':');
   const u = state.up;
-  if (a === 'choose') {
-    state.up = { step:'review', paid:false, cat:'', sched:'', areas:[], decl:[false, false, false] };
-    toast(`${upPackage().id}.${upPackage().ver}.nupkg read`);
+  if (a === 'icon') {
+    /* no re-render here: the file input must stay attached while the native
+       dialog is open, or its change event never reaches the page */
+    const f = $('.upcard__file');
+    if (f) f.click();
+    return true;
   }
+  if (a === 'choose') upChoose();
   else if (a === 'cancel' || a === 'again') state.up = null;
-  else if (a === 'paid') u.paid = !u.paid;
+  else if (a === 'paid') u.paid = arg === 'paid';
+  else if (a === 'tagdel') u.tags.splice(+arg, 1);
   else if (a === 'sched') u.sched = arg;
   else if (a === 'area') {
     if (u.sched !== 'yes') return true;
@@ -2947,7 +3025,66 @@ function devField(ev, redraw) {
   if (uf && state.up) state.up[uf] = ev.target.value;
 }
 $('#storeBody').addEventListener('input', ev => { if (ev.target.tagName === 'INPUT') devField(ev, false); });
-$('#storeBody').addEventListener('change', ev => { if (ev.target.tagName === 'SELECT') devField(ev, true); });
+/* the card-icon picker: a picked or dropped image lands in the preview circle */
+function upIconFile(file) {
+  if (!file || !state.up) return;
+  const rd = new FileReader();
+  rd.onload = () => { state.up.icon = rd.result; renderPublish(); };
+  rd.readAsDataURL(file);
+}
+$('#storeBody').addEventListener('change', ev => {
+  if (ev.target.classList.contains('upcard__file')) {
+    upIconFile(ev.target.files && ev.target.files[0]);
+    return;
+  }
+  if (ev.target.tagName === 'SELECT') devField(ev, true);
+});
+
+/* the tag editor: Enter (or comma) turns the typed text into a chip; the
+   package's own tags are fixed and cannot be duplicated */
+$('#storeBody').addEventListener('keydown', ev => {
+  if (!ev.target.classList.contains('uptags__in')) return;
+  if (ev.key !== 'Enter' && ev.key !== ',') return;
+  ev.preventDefault();
+  const v = ev.target.value.trim().toLowerCase().replace(/,+$/, '');
+  if (!v || !state.up) return;
+  if (!state.up.tags.includes(v) && !['ency-extension', 'utility'].includes(v)) state.up.tags.push(v);
+  renderPublish();
+  const inp = $('.uptags__in');
+  if (inp) inp.focus();
+});
+/* clicking anywhere on the tag box lands in its input */
+$('#storeBody').addEventListener('click', ev => {
+  const box = ev.target.closest('.uptags');
+  if (box && !ev.target.closest('.uptag__x')) {
+    const inp = box.querySelector('.uptags__in');
+    if (inp) inp.focus();
+  }
+});
+
+/* the publish drop zone takes a dragged file too; children are click-through
+   (CSS pointer-events), so dragleave only fires on leaving the zone itself */
+$('#storeBody').addEventListener('dragover', ev => {
+  const z = ev.target.closest('.updrop, .upcard__pick');
+  if (!z || z.classList.contains('is-off')) return;
+  ev.preventDefault();
+  z.classList.add('is-drag');
+});
+$('#storeBody').addEventListener('dragleave', ev => {
+  const z = ev.target.closest('.updrop, .upcard__pick');
+  if (z) z.classList.remove('is-drag');
+});
+$('#storeBody').addEventListener('drop', ev => {
+  const z = ev.target.closest('.updrop, .upcard__pick');
+  if (!z || z.classList.contains('is-off')) return;
+  ev.preventDefault();
+  if (z.classList.contains('upcard__pick')) {
+    upIconFile(ev.dataTransfer.files && ev.dataTransfer.files[0]);
+    return;
+  }
+  upChoose();
+  renderPublish();
+});
 
 /* cards / rows / stars / detail actions */
 $('#storeBody').addEventListener('click', ev => {
