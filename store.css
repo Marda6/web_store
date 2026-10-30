@@ -225,8 +225,10 @@
   font-size:12px; font-weight:500; color:var(--ec-fg-100); white-space:nowrap;
   transition:background .12s,border-color .12s; }
 .xinstall:hover { background:var(--ec-fg-16); }
-/* price on the action button: a white pill with dark ink, where you act */
-.xinstall--price { padding:0 12px; background:#fff; color:#0e1010; font-weight:600; }
+/* price on the action button: a white pill with dark ink, where you act.
+   A short price ("$29") would make a tiny target, so it keeps Install's width */
+.xinstall--price { min-width:72px; justify-content:center; padding:0 12px;
+  background:#fff; color:#0e1010; font-weight:600; }
 .xinstall--price:hover { background:rgba(255,255,255,.88); }
 .xinstall.is-on { background:var(--ec-green-08); border-color:var(--ec-green); font-weight:400; }
 .xinstall svg { width:13px; height:13px; }
