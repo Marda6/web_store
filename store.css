@@ -197,6 +197,18 @@
   padding:8px 0 10px; border-top:1px solid var(--ec-fg-6); }
 .xcard__kind { font-size:12px; font-weight:500; color:var(--ec-fg-96); white-space:nowrap; }
 .xcard__fsep { width:1px; height:12px; flex-shrink:0; background:var(--ec-fg-12); }
+/* like: an inline stat that toggles — quiet next to the install count,
+   green thumb when it is yours */
+.xlike { display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
+  height:20px; padding:0 5px; border-radius:var(--ec-radius);
+  font-size:12px; color:var(--ec-fg-64); font-variant-numeric:tabular-nums;
+  transition:background .12s,color .12s; cursor:pointer; }
+.xlike:hover { background:var(--ec-fg-8); color:var(--ec-fg-100); }
+.xlike svg { width:13px; height:13px; color:var(--ec-fg-48); transition:color .12s; }
+.xlike:hover svg { color:var(--ec-fg-80); }
+.xlike.is-on { color:var(--ec-fg-100); }
+.xlike.is-on svg { color:var(--ec-green); }
+
 .xcard__inst { display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
   font-size:12px; color:var(--ec-fg-64); font-variant-numeric:tabular-nums; }
 .xcard__inst svg { width:13px; height:13px; color:var(--ec-fg-48); }
@@ -648,7 +660,10 @@
 /* moderation: queue on the left (pick), review pane on the right (judge).
    The pane keeps the store-card anatomy — tinted hero, body, footer that owns
    the decision — because the moderator is judging what the shop will show. */
-.mod { display:grid; grid-template-columns:280px minmax(0,1fr); gap:8px; align-items:start; }
+/* the review pane is a reading surface — capped at the width it had under
+   the old 1440px shell, so it does not stretch on wide screens */
+.mod { display:grid; grid-template-columns:280px minmax(0,1fr); gap:8px; align-items:start;
+  max-width:1136px; }
 .modq { display:flex; flex-direction:column; gap:2px; padding:4px;
   border:1px solid transparent; border-radius:var(--ec-radius-md); background:var(--ec-fg-4); }
 .modq__row { display:flex; align-items:center; gap:8px; padding:6px 8px; text-align:left;
@@ -665,6 +680,8 @@
 .modq__side { display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0; }
 .modq__when { font-size:10px; color:var(--ec-fg-48); white-space:nowrap; }
 .modq__flags { font-size:10px; color:var(--ec-amber); white-space:nowrap; }
+/* your own submission: you can open it, another moderator decides it */
+.modq__mine { font-size:10px; color:var(--ec-fg-48); white-space:nowrap; }
 .modq__done { padding:6px 8px; font-size:11px; color:var(--ec-fg-32); }
 
 .modv { display:flex; flex-direction:column; overflow:hidden;
@@ -688,6 +705,12 @@
 .modv__prevrow span { color:var(--ec-fg-72); min-width:0; overflow:hidden; text-overflow:ellipsis;
   white-space:nowrap; }
 .modv__prevrow i { margin-left:auto; font-style:normal; color:var(--ec-fg-48); white-space:nowrap; }
+/* an update reads as its difference from what is live: what changed, then to what */
+.modv__diff { display:grid; grid-template-columns:max-content 1fr; gap:4px 16px; font-size:12px;
+  line-height:18px; }
+.modv__diffrow { display:contents; }
+.modv__diffrow span { color:var(--ec-fg-56); }
+.modv__diffrow b { font-weight:500; color:var(--ec-fg-96); min-width:0; overflow-wrap:anywhere; }
 /* facts rail: the kv grid plus publisher standing and package tools */
 .modv__facts { display:flex; flex-direction:column; gap:12px; padding:10px 12px;
   border-radius:var(--ec-radius); background:var(--ec-fg-4); }
@@ -742,6 +765,7 @@
   border-radius:var(--ec-radius); background:var(--ec-fg-100); color:var(--ec-bg);
   font-size:12px; font-weight:500; white-space:nowrap; transition:background .12s; }
 .btn-approve:hover { background:var(--ec-fg-80); }
+.btn-approve:disabled { opacity:.35; cursor:default; background:var(--ec-fg-100); }
 .btn-approve svg { width:14px; height:14px; }
 .btn-quiet.is-danger { color:var(--op-coral); }
 .btn-quiet.is-danger svg { color:var(--op-coral); }
@@ -879,6 +903,163 @@
 
 @media (max-width:820px) { .pub__cols { grid-template-columns:1fr; } }
 
+/* ========================================================== DEVELOPER ===== */
+/* the gate card spans both routes, above them */
+.pubgate { margin-bottom:8px; }
+.legal { margin:6px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:2px; }
+.legal li { display:flex; align-items:baseline; gap:8px; font-size:11px; line-height:18px; }
+.legal__v { color:var(--ec-fg-48); font-size:11px; }
+/* the documents in two meaning-columns (contract | publishing rules) */
+.legalcols { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px 24px; margin-top:16px; }
+.legalcol__label { font-size:11px; color:var(--ec-fg-48); }
+.legalcols .legal { margin-top:4px; }
+@media (max-width:640px) { .legalcols { grid-template-columns:1fr; } }
+.dterms { margin-top:8px; }
+
+/* one panel: the step rail and the form share a card, split by a vertical
+   hairline. Done steps are buttons (jump back any time); the number ring
+   turns into a green check */
+.dwiz { display:grid; grid-template-columns:176px minmax(0,1fr); padding:0;
+  max-width:760px; }
+.drail { margin:0; padding:8px; list-style:none; display:flex; flex-direction:column; gap:1px;
+  border-right:1px solid var(--divider); }
+/* the pane keeps one height across steps (no jumping Next button) and the
+   footer sits at the bottom edge, clear of the last control */
+.dwiz__main { padding:16px 16px 14px; min-width:0; min-height:420px;
+  display:flex; flex-direction:column; }
+.dwiz__main .dstep { flex:1; display:flex; flex-direction:column; }
+.dwiz__main .dstep > * { flex-shrink:0; }
+.drail li { display:flex; min-width:0; }
+.drail__row { display:flex; align-items:center; gap:8px; width:100%; height:28px; padding:0 8px;
+  border-radius:var(--ec-radius); font-size:12px; color:var(--ec-fg-64); text-align:left;
+  white-space:nowrap; }
+.drail__jump { transition:background .12s,color .12s; }
+.drail__jump:hover { background:var(--ec-fg-6); color:var(--ec-fg-100); }
+.drail i { display:grid; place-items:center; width:16px; height:16px; flex-shrink:0;
+  border-radius:999px; font-style:normal; font-size:10px;
+  border:1px solid var(--ec-fg-24); color:var(--ec-fg-56); }
+.drail li.is-on .drail__row { background:var(--ec-fg-8); color:var(--ec-fg-100); font-weight:500; }
+.drail li.is-on i { border-color:var(--ec-blue-soft); color:var(--ec-blue-soft); }
+.drail li.is-done i { border-color:var(--ec-green); background:var(--ec-green); color:#04150e; }
+/* narrow screens: the rail lies down above the form, the hairline follows */
+@media (max-width:700px) {
+  .dwiz { grid-template-columns:1fr; }
+  .drail { flex-direction:row; flex-wrap:wrap; border-right:none;
+    border-bottom:1px solid var(--divider); }
+  .drail li { width:auto; }
+}
+
+.dstep__title { margin:0 0 8px; font-size:12px; line-height:16px; font-weight:500; color:var(--ec-fg-100); }
+.dchoices { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; }
+@media (max-width:640px) { .dchoices { grid-template-columns:1fr; } }
+.dchoice { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; text-align:left;
+  border-radius:var(--ec-radius); border:1px solid var(--ec-fg-8); background:var(--ec-fg-4);
+  transition:border-color .12s,background .12s; }
+.dchoice:hover { border-color:var(--ec-fg-16); }
+.dchoice.is-on { border-color:var(--ec-green); }
+.dchoice .frow__radio { margin-top:1px; }
+.dchoice.is-on .frow__radio { border-color:var(--ec-green); }
+.dchoice.is-on .frow__radio::after { content:''; width:6px; height:6px; border-radius:999px; background:var(--ec-green); }
+.dchoice__text { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.dchoice__text b { font-size:12px; font-weight:500; color:var(--ec-fg-100); }
+.dchoice__text span { font-size:11px; line-height:16px; color:var(--ec-fg-56); }
+.dchoice--row { width:100%; margin-top:6px; padding:6px 10px; }
+.dnote { margin-top:10px; font-size:11px; line-height:16px; color:var(--ec-fg-72); }
+
+/* label column + control column */
+.dform { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.dform--tight { margin-top:8px; }
+/* air between meaning-groups of one step (account facts vs. what you type) */
+.dform--group { margin-top:24px; }
+.dfield { display:grid; grid-template-columns:180px minmax(0,1fr); gap:12px; align-items:start; }
+.dfield__label { padding-top:4px; font-size:11px; color:var(--ec-fg-64); }
+.dfield__label i { font-style:normal; color:var(--ec-fg-40, var(--ec-fg-48)); }
+.dfield__body { display:flex; flex-direction:column; gap:3px; max-width:420px; }
+.dfield__hint { font-size:11px; color:var(--ec-fg-48); }
+/* required-field feedback: appears on a failed Next, calms down as you type */
+.dfield.is-invalid .field { border-color:var(--op-coral); }
+.dfield.is-invalid > .dfield__label { color:var(--op-coral); }
+.dfield__req { font-size:11px; color:var(--op-coral); }
+.dchoices.is-invalid .dchoice { border-color:rgba(255,112,114,.45); }
+.dcheck.is-invalid .frow__check { border-color:var(--op-coral); }
+/* read-only account facts wear the same input as everything else; the state
+   badge sits inside the field, on its right edge */
+.dinput { position:relative; display:block; }
+.dinput .field { padding-right:92px; }
+.dinput__ok { position:absolute; right:8px; top:50%; transform:translateY(-50%);
+  font-size:11px; color:var(--ec-badge); pointer-events:none; }
+.field[readonly] { color:var(--ec-fg-72); }
+
+.dfield__fixed { min-height:24px; display:flex; align-items:center; flex-wrap:wrap; gap:6px; font-size:12px;
+  color:var(--ec-fg-100); }
+.dfield__fixed i { font-style:normal; color:var(--ec-fg-48); font-size:11px; }
+select.field { padding-right:4px; }
+/* the dropdown list itself is native: give its rows explicit theme colors */
+select.field option { background:var(--ec-popover); color:var(--ec-fg-96); }
+.dphone { display:flex; gap:6px; }
+.dphone__code { width:150px; flex-shrink:0; }
+.dok { font-size:11px; color:var(--ec-badge); }
+@media (max-width:640px) { .dfield { grid-template-columns:1fr; gap:2px; } }
+
+.dcheck { display:flex; align-items:flex-start; gap:8px; width:100%; margin-top:10px; padding:0;
+  text-align:left; font-size:11px; line-height:16px; color:var(--ec-fg-80); }
+/* a standalone legal action (authority, agreeing to the terms) is not part of
+   the field above it — it sinks to the bottom of the step, just above the
+   footer hairline (24px stays its minimum air when the form is tall) */
+.dcheck--apart { margin-top:auto; padding-top:24px; }
+.dcheck .frow__check { margin-top:1px; }
+.dcheck.is-on .frow__check { background:var(--ec-green); border-color:var(--ec-green); color:#04150e; }
+.dcheck i { font-style:normal; color:var(--ec-fg-48); }
+
+/* the same 24px group air as between form groups */
+.dbefore { margin-top:24px; padding:10px 12px; border-radius:var(--ec-radius); background:var(--ec-fg-4); }
+.dbefore p { font-size:11px; line-height:16px; color:var(--ec-fg-72); }
+.dbefore p + p { margin-top:6px; }
+.dbefore__title { margin-bottom:4px; font-size:11px; font-weight:500; color:var(--ec-fg-100); }
+
+.dwiz__foot { display:flex; align-items:center; gap:10px; margin-top:12px; padding-top:12px;
+  border-top:1px solid var(--divider); }
+.dwiz__err { font-size:11px; color:#ff9a9b; }
+.btn-primary:disabled { opacity:.4; cursor:default; }
+.btn-primary:disabled:hover { background:var(--ec-green); }
+
+.dbanner { display:flex; align-items:center; gap:8px; margin-bottom:8px; padding:8px 12px;
+  border-radius:var(--ec-radius-md); background:var(--ec-green-16); font-size:12px; color:var(--ec-fg-100); }
+.dbanner svg { width:16px; height:16px; color:var(--ec-badge); flex-shrink:0; }
+.drow { display:flex; gap:12px; padding:5px 0; border-bottom:1px solid var(--divider); font-size:12px; }
+.drow:last-of-type { border-bottom:none; }
+.drow__label { width:140px; flex-shrink:0; color:var(--ec-fg-56); font-size:11px; padding-top:1px; }
+.drow__value { display:flex; align-items:center; flex-wrap:wrap; gap:8px; color:var(--ec-fg-100); }
+/* prototype-only shortcuts read as a margin note, not as product UI */
+.dproto { margin-top:6px; font-size:11px; color:var(--ec-fg-40, var(--ec-fg-48)); font-style:italic; }
+.dpaidnote .dproto { margin-top:4px; }
+
+.dbal { font-size:12px; color:var(--ec-fg-72); }
+.dbal b { font-size:16px; font-weight:500; color:var(--ec-fg-100); margin-right:4px; }
+.dbar { height:4px; margin:8px 0; border-radius:999px; background:var(--ec-fg-8); overflow:hidden; }
+.dbar i { display:block; height:100%; background:var(--ec-green); }
+
+/* upload review */
+.upreview { margin-top:8px; }
+.upcols { display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:16px; }
+@media (max-width:820px) { .upcols { grid-template-columns:1fr; } }
+.upreview code { padding:1px 4px; border-radius:3px; background:var(--ec-fg-8); font-size:11px; }
+.upcard { display:flex; align-items:center; gap:10px; margin:10px 0 6px; padding:10px;
+  border-radius:var(--ec-radius-md); border:1px solid var(--ec-fg-8); }
+.upcard__logo { width:40px; height:40px; flex-shrink:0; }
+.upcard__logo svg { width:22px; height:22px; }
+.upcard b { display:block; font-size:12px; font-weight:500; color:var(--ec-fg-100); }
+.upcard span { font-size:11px; color:var(--ec-fg-56); }
+.sched { margin-top:12px; padding-top:12px; border-top:1px solid var(--divider); }
+.sched__q { margin-top:8px; font-size:12px; color:var(--ec-fg-100); }
+.sched__table { margin:6px 0 8px; }
+.sched__table.is-off { opacity:.4; pointer-events:none; }
+.sched__table tbody tr { cursor:pointer; }
+.sched__ck { width:24px; }
+.sched__ck .dcheck { margin-top:0; }
+.sched__decl { margin-top:4px; }
+.updone { max-width:640px; margin:24px auto 0; }
+
 /* toast for stubbed actions */
 .toast { position:fixed; z-index:90; left:50%; bottom:24px; transform:translateX(-50%);
   display:flex; align-items:center; gap:8px; padding:8px 12px;
@@ -887,6 +1068,92 @@
   opacity:0; pointer-events:none; transition:opacity .18s; }
 .toast.is-shown { opacity:1; }
 .toast svg { width:14px; height:14px; color:var(--ec-fg-56); }
+
+/* ================================================================ MONEY === */
+
+/* the package file sits beside Install on the same square plate as the star */
+.dact__icon { display:grid; place-items:center; width:32px; height:32px; flex-shrink:0;
+  border-radius:var(--ec-radius); background:var(--ec-fg-8); color:var(--ec-fg-72);
+  transition:background .12s,color .12s; }
+.dact__icon:hover { background:var(--ec-fg-12); color:var(--ec-fg-100); }
+.dact__icon svg { width:14px; height:14px; }
+
+/* purchase block: plan switch → one button → the plan's terms */
+.dbuy { display:flex; flex-direction:column; gap:8px; }
+.dbuy__note { font-size:11px; line-height:16px; color:var(--ec-fg-56); }
+/* the free leftover: a version from before the price, offered quietly */
+.dfree { display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+  padding:8px 10px; border-radius:var(--ec-radius-md); background:var(--ec-fg-4);
+  font-size:11px; line-height:16px; color:var(--ec-fg-72); }
+.dfree .publink { font-size:11px; }
+/* the price is set where it is read: the cell itself is the select, always visible */
+.pricesel { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.pricesel.is-free span { color:var(--ec-fg-64); }
+.downed { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--ec-badge); }
+.downed svg { width:13px; height:13px; flex-shrink:0; }
+
+/* ended, unfinished, refunded: a fact, not a flag — the neutral pill */
+.statetag.is-off { background:var(--ec-fg-8); color:var(--ec-fg-56); }
+.atable tr.is-muted td { color:var(--ec-fg-48); }
+.atable tr.is-muted .atable__logo { opacity:.5; }
+.atable__aside { margin-left:8px; font-size:11px; color:var(--ec-fg-48); }
+
+/* small window: same chrome as the extension view, a footer for the decision */
+.dwin__box--narrow { max-width:420px; }
+.dwin__foot { display:flex; justify-content:flex-end; gap:8px; flex-shrink:0;
+  padding:10px 12px; border-top:1px solid var(--divider); }
+.dwin__foot .btn-primary:disabled { opacity:.45; cursor:default; }
+.dwin__foot .btn-primary:disabled:hover { background:var(--ec-green); }
+
+/* price form: Free/Paid gate, then one row per plan — tick, amount, hint */
+.pform { display:flex; flex-direction:column; gap:12px; padding:16px; }
+.pform__rows { display:flex; flex-direction:column; gap:4px; }
+.prow { display:grid; grid-template-columns:120px 120px 1fr; align-items:center; gap:8px;
+  min-height:28px; }
+.prow .frow { padding:0 4px; }
+.prow__label { padding:0 4px 0 26px; font-size:12px; color:var(--ec-fg-72); }
+.prow__amt { display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ec-fg-56); }
+.prow__amt .field { width:72px; text-align:right; font-variant-numeric:tabular-nums; }
+.prow__amt b { font-weight:500; color:var(--ec-fg-100); font-variant-numeric:tabular-nums; }
+.prow__amt i { font-style:normal; color:var(--ec-fg-48); }
+.prow__hint { font-size:11px; color:var(--ec-fg-48); }
+.prow.is-off .prow__amt, .prow.is-off .prow__label { opacity:.4; }
+.prow.is-off .prow__hint { visibility:hidden; }
+.pform .is-bad, .prow__hint.is-bad { color:#ff9a9b; }
+
+/* ============================================================ PIPELINE === */
+
+/* the signing queue's one-line verdict: a dot in the state's hue, then words */
+.sigstate { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--ec-fg-80); }
+.sigstate i { width:8px; height:8px; border-radius:999px; flex-shrink:0; background:var(--ec-badge); }
+.sigstate.is-wait i { background:var(--ec-amber); }
+.sigstate.is-bad i { background:var(--op-coral); }
+.acct__subhead { margin:16px 0 8px; font-size:12px; line-height:16px; font-weight:500;
+  color:var(--ec-fg-72); }
+.atable__why { display:block; font-size:12px; color:var(--ec-fg-96); }
+.atable__sub--inline { display:inline; margin:0; }
+.atable__ver { margin-right:8px; font-size:12px; color:var(--ec-fg-96); font-variant-numeric:tabular-nums; }
+.atable__strong { font-weight:500; color:var(--ec-fg-100); font-variant-numeric:tabular-nums; }
+.atable tr.is-link { cursor:pointer; }
+/* a table inside a review pane: no card of its own, rows on the pane's surface */
+.atable--plain th:first-child, .atable--plain td:first-child { padding-left:0; }
+.atable--plain tbody tr:hover { background:none; }
+.atable tr.is-open td { border-bottom:none; }
+.atable__steps td { padding-top:0; }
+/* a version's steps, oldest first, threaded on one line like a commit log */
+.steps { margin:0; padding:0 0 4px; list-style:none; }
+.steps li { position:relative; display:flex; align-items:baseline; gap:8px; padding:0 0 6px 16px;
+  font-size:11px; line-height:16px; color:var(--ec-fg-56); }
+.steps li::before { content:''; position:absolute; left:3px; top:5px; width:6px; height:6px;
+  border-radius:999px; background:var(--ec-fg-24); }
+.steps li::after { content:''; position:absolute; left:5.5px; top:13px; bottom:-3px; width:1px;
+  background:var(--ec-fg-12); }
+.steps li.is-last::after { display:none; }
+.steps li.is-last::before { background:var(--ec-amber); }
+.steps b { font-weight:500; color:var(--ec-fg-80); }
+.steps i { margin-left:auto; font-style:normal; white-space:nowrap; }
+.pkgv .modv__body { padding-top:4px; }
+.pkgv .reqcard__state { background:var(--ec-bg-80); color:#fff; }
 
 /* card grid steps down as the window narrows, so a card never gets thinner
    than it needs for its title + meta line */
